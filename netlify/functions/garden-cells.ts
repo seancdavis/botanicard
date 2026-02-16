@@ -32,13 +32,34 @@ export default async (req: Request, context: Context) => {
 
   if (req.method === "GET" && !id) {
     const seasonId = url.searchParams.get("season");
-    let query = db.select().from(gardenCells);
-    if (seasonId) {
-      query = query.where(
-        eq(gardenCells.seasonId, parseInt(seasonId, 10))
-      ) as typeof query;
-    }
-    const rows = await query.orderBy(gardenCells.cardId);
+    const selectFields = {
+      id: gardenCells.id,
+      cardId: gardenCells.cardId,
+      seasonId: gardenCells.seasonId,
+      plantType: gardenCells.plantType,
+      variety: gardenCells.variety,
+      seedCount: gardenCells.seedCount,
+      status: gardenCells.status,
+      description: gardenCells.description,
+      createdAt: gardenCells.createdAt,
+      updatedAt: gardenCells.updatedAt,
+      primaryPhotoBlobKey: sql<string | null>`(
+        SELECT p.blob_key FROM photos p
+        INNER JOIN notes n ON n.id = p.note_id
+        WHERE n.entity_type = 'garden_cell' AND n.entity_id = ${gardenCells.id}
+        ORDER BY n.created_at DESC LIMIT 1
+      )`,
+    };
+    const rows = seasonId
+      ? await db
+          .select(selectFields)
+          .from(gardenCells)
+          .where(eq(gardenCells.seasonId, parseInt(seasonId, 10)))
+          .orderBy(gardenCells.cardId)
+      : await db
+          .select(selectFields)
+          .from(gardenCells)
+          .orderBy(gardenCells.cardId);
     return Response.json(rows);
   }
 
@@ -73,7 +94,10 @@ export default async (req: Request, context: Context) => {
       })
     );
 
-    return Response.json({ ...cell, season, notes: notesWithPhotos });
+    const primaryPhoto =
+      notesWithPhotos.find((n) => n.photos.length > 0)?.photos[0] || null;
+
+    return Response.json({ ...cell, season, primaryPhoto, notes: notesWithPhotos });
   }
 
   if (req.method === "POST") {

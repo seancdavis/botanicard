@@ -13,6 +13,7 @@ interface Planter {
   name: string;
   description?: string;
   status: string;
+  primaryPhotoBlobKey?: string | null;
 }
 
 export function PlanterList() {
@@ -57,22 +58,31 @@ export function PlanterList() {
             <Card
               key={planter.id}
               onClick={() => navigate(`/planters/${planter.id}`)}
-              className="p-5"
+              className="overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-mono text-text/40">
-                  {planter.cardId}
-                </span>
-                <StatusBadge status={planter.status} />
-              </div>
-              <h3 className="text-lg font-heading font-semibold">
-                {planter.name}
-              </h3>
-              {planter.description && (
-                <p className="text-sm text-text/60 mt-1 line-clamp-2">
-                  {planter.description}
-                </p>
+              {planter.primaryPhotoBlobKey && (
+                <img
+                  src={`/api/photos/${planter.primaryPhotoBlobKey}`}
+                  alt={planter.name}
+                  className="w-full h-40 object-cover"
+                />
               )}
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-mono text-text/40">
+                    {planter.cardId}
+                  </span>
+                  <StatusBadge status={planter.status} />
+                </div>
+                <h3 className="text-lg font-heading font-semibold">
+                  {planter.name}
+                </h3>
+                {planter.description && (
+                  <p className="text-sm text-text/60 mt-1 line-clamp-2">
+                    {planter.description}
+                  </p>
+                )}
+              </div>
             </Card>
           ))}
         </div>

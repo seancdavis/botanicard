@@ -18,6 +18,7 @@ interface Cell {
   plantType: string;
   variety?: string;
   status: string;
+  primaryPhotoBlobKey?: string | null;
 }
 
 export function GardenDashboard() {
@@ -94,19 +95,28 @@ export function GardenDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {cells.map((cell) => (
                 <Link key={cell.id} to={`/garden/cells/${cell.id}`}>
-                  <Card className="p-5 hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-mono text-text/40">
-                        {cell.cardId}
-                      </span>
-                      <StatusBadge status={cell.status} />
-                    </div>
-                    <h3 className="text-lg font-heading font-semibold">
-                      {cell.plantType}
-                    </h3>
-                    {cell.variety && (
-                      <p className="text-sm text-text/60 mt-1">{cell.variety}</p>
+                  <Card className="overflow-hidden hover:shadow-md transition-shadow">
+                    {cell.primaryPhotoBlobKey && (
+                      <img
+                        src={`/api/photos/${cell.primaryPhotoBlobKey}`}
+                        alt={cell.plantType}
+                        className="w-full h-40 object-cover"
+                      />
                     )}
+                    <div className="p-5">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-mono text-text/40">
+                          {cell.cardId}
+                        </span>
+                        <StatusBadge status={cell.status} />
+                      </div>
+                      <h3 className="text-lg font-heading font-semibold">
+                        {cell.plantType}
+                      </h3>
+                      {cell.variety && (
+                        <p className="text-sm text-text/60 mt-1">{cell.variety}</p>
+                      )}
+                    </div>
                   </Card>
                 </Link>
               ))}

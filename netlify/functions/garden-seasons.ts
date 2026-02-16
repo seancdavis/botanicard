@@ -1,6 +1,6 @@
 import type { Config, Context } from "@netlify/functions";
 import { eq, desc, sql } from "drizzle-orm";
-import { db, gardenSeasons, gardenCells } from "../../db";
+import { db, gardenSeasons, gardenCells, photos, notes } from "../../db";
 
 export default async (req: Request, context: Context) => {
   const url = new URL(req.url);
@@ -36,7 +36,24 @@ export default async (req: Request, context: Context) => {
     if (!season) return Response.json({ error: "Not found" }, { status: 404 });
 
     const cells = await db
-      .select()
+      .select({
+        id: gardenCells.id,
+        cardId: gardenCells.cardId,
+        seasonId: gardenCells.seasonId,
+        plantType: gardenCells.plantType,
+        variety: gardenCells.variety,
+        seedCount: gardenCells.seedCount,
+        status: gardenCells.status,
+        description: gardenCells.description,
+        createdAt: gardenCells.createdAt,
+        updatedAt: gardenCells.updatedAt,
+        primaryPhotoBlobKey: sql<string | null>`(
+          SELECT p.blob_key FROM photos p
+          INNER JOIN notes n ON n.id = p.note_id
+          WHERE n.entity_type = 'garden_cell' AND n.entity_id = ${gardenCells.id}
+          ORDER BY n.created_at DESC LIMIT 1
+        )`,
+      })
       .from(gardenCells)
       .where(eq(gardenCells.seasonId, id))
       .orderBy(gardenCells.cardId);

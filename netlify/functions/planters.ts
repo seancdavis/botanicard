@@ -17,7 +17,21 @@ export default async (req: Request, context: Context) => {
 
   if (req.method === "GET" && !id) {
     const rows = await db
-      .select()
+      .select({
+        id: planters.id,
+        cardId: planters.cardId,
+        name: planters.name,
+        description: planters.description,
+        status: planters.status,
+        createdAt: planters.createdAt,
+        updatedAt: planters.updatedAt,
+        primaryPhotoBlobKey: sql<string | null>`(
+          SELECT p.blob_key FROM photos p
+          INNER JOIN notes n ON n.id = p.note_id
+          WHERE n.entity_type = 'planter' AND n.entity_id = ${planters.id}
+          ORDER BY n.created_at DESC LIMIT 1
+        )`,
+      })
       .from(planters)
       .orderBy(desc(planters.createdAt));
     return Response.json(rows);
@@ -54,9 +68,13 @@ export default async (req: Request, context: Context) => {
       })
     );
 
+    const primaryPhoto =
+      notesWithPhotos.find((n) => n.photos.length > 0)?.photos[0] || null;
+
     return Response.json({
       ...planter,
       currentPlants,
+      primaryPhoto,
       notes: notesWithPhotos,
     });
   }

@@ -36,6 +36,7 @@ interface HouseplantDetail {
   parent?: { id: number; cardId: string; name: string } | null;
   children?: { id: number; cardId: string; name: string; status: string }[];
   planter?: { id: number; cardId: string; name: string } | null;
+  primaryPhoto?: Photo | null;
   notes: Note[];
 }
 
@@ -103,6 +104,14 @@ export function HouseplantDetail() {
           </div>
         }
       />
+
+      {plant.primaryPhoto && (
+        <img
+          src={`/api/photos/${plant.primaryPhoto.blobKey}`}
+          alt={plant.name}
+          className="w-full h-64 object-cover rounded-xl mb-6"
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">

@@ -13,6 +13,7 @@ interface Houseplant {
   name: string;
   description?: string;
   status: string;
+  primaryPhotoBlobKey?: string | null;
 }
 
 export function HouseplantList() {
@@ -57,22 +58,31 @@ export function HouseplantList() {
             <Card
               key={plant.id}
               onClick={() => navigate(`/houseplants/${plant.id}`)}
-              className="p-5"
+              className="overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-mono text-text/40">
-                  #{plant.cardId}
-                </span>
-                <StatusBadge status={plant.status} />
-              </div>
-              <h3 className="text-lg font-heading font-semibold">
-                {plant.name}
-              </h3>
-              {plant.description && (
-                <p className="text-sm text-text/60 mt-1 line-clamp-2">
-                  {plant.description}
-                </p>
+              {plant.primaryPhotoBlobKey && (
+                <img
+                  src={`/api/photos/${plant.primaryPhotoBlobKey}`}
+                  alt={plant.name}
+                  className="w-full h-40 object-cover"
+                />
               )}
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-mono text-text/40">
+                    #{plant.cardId}
+                  </span>
+                  <StatusBadge status={plant.status} />
+                </div>
+                <h3 className="text-lg font-heading font-semibold">
+                  {plant.name}
+                </h3>
+                {plant.description && (
+                  <p className="text-sm text-text/60 mt-1 line-clamp-2">
+                    {plant.description}
+                  </p>
+                )}
+              </div>
             </Card>
           ))}
         </div>
