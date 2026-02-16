@@ -1,4 +1,4 @@
-import type { Context } from "@netlify/functions";
+import type { Config, Context } from "@netlify/functions";
 import { getStore } from "@netlify/blobs";
 
 export default async (req: Request, context: Context) => {
@@ -10,9 +10,7 @@ export default async (req: Request, context: Context) => {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     if (!file) {
-      return new Response(JSON.stringify({ error: "No file provided" }), {
-        status: 400,
-      });
+      return Response.json({ error: "No file provided" }, { status: 400 });
     }
 
     const store = getStore("photos");
@@ -52,11 +50,9 @@ export default async (req: Request, context: Context) => {
     }
   }
 
-  return new Response(JSON.stringify({ error: "Method not allowed" }), {
-    status: 405,
-  });
+  return Response.json({ error: "Method not allowed" }, { status: 405 });
 };
 
-export const config = {
+export const config: Config = {
   path: "/api/photos/*",
 };

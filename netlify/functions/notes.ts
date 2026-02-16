@@ -1,10 +1,8 @@
-import type { Context } from "@netlify/functions";
-import { eq, desc } from "drizzle-orm";
-import { getDb } from "./_shared/db.js";
-import { notes, photos } from "./_shared/schema.js";
+import type { Config, Context } from "@netlify/functions";
+import { eq } from "drizzle-orm";
+import { db, notes, photos } from "../../db";
 
 export default async (req: Request, context: Context) => {
-  const db = getDb();
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
   const id = pathParts.length > 2 ? parseInt(pathParts[2], 10) : null;
@@ -12,8 +10,8 @@ export default async (req: Request, context: Context) => {
   if (req.method === "POST") {
     const body = await req.json();
     if (!body.entityType || !body.entityId) {
-      return new Response(
-        JSON.stringify({ error: "entityType and entityId are required" }),
+      return Response.json(
+        { error: "entityType and entityId are required" },
         { status: 400 }
       );
     }
@@ -48,7 +46,7 @@ export default async (req: Request, context: Context) => {
       .set({ content: body.content })
       .where(eq(notes.id, id))
       .returning();
-    if (!updated) return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    if (!updated) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json(updated);
   }
 
@@ -56,15 +54,13 @@ export default async (req: Request, context: Context) => {
     // Delete associated photos first
     await db.delete(photos).where(eq(photos.noteId, id));
     const [deleted] = await db.delete(notes).where(eq(notes.id, id)).returning();
-    if (!deleted) return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    if (!deleted) return Response.json({ error: "Not found" }, { status: 404 });
     return new Response(null, { status: 204 });
   }
 
-  return new Response(JSON.stringify({ error: "Method not allowed" }), {
-    status: 405,
-  });
+  return Response.json({ error: "Method not allowed" }, { status: 405 });
 };
 
-export const config = {
+export const config: Config = {
   path: ["/api/notes", "/api/notes/*"],
 };

@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm";
-import { getDb } from "./db.js";
-import { approvedUsers } from "./schema.js";
+import { db, approvedUsers } from "../../../db";
 
 export interface AuthUser {
   email: string;
@@ -21,7 +20,6 @@ export async function getAuthUser(req: Request): Promise<AuthUser | null> {
 
   if (!payload.email) return null;
 
-  const db = getDb();
   const [approved] = await db
     .select()
     .from(approvedUsers)
@@ -40,10 +38,7 @@ export async function getAuthUser(req: Request): Promise<AuthUser | null> {
 export async function requireAuth(req: Request): Promise<AuthUser> {
   const user = await getAuthUser(req);
   if (!user) {
-    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    throw Response.json({ error: "Unauthorized" }, { status: 401 });
   }
   return user;
 }

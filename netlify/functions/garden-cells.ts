@@ -1,17 +1,8 @@
-import type { Context } from "@netlify/functions";
+import type { Config, Context } from "@netlify/functions";
 import { eq, desc, sql } from "drizzle-orm";
-import { getDb } from "./_shared/db.js";
-import {
-  gardenCells,
-  gardenSeasons,
-  notes,
-  photos,
-} from "./_shared/schema.js";
+import { db, gardenCells, gardenSeasons, notes, photos } from "../../db";
 
-async function generateCardId(
-  db: ReturnType<typeof getDb>,
-  seasonId: number
-): Promise<string> {
+async function generateCardId(seasonId: number): Promise<string> {
   // Get the season year
   const [season] = await db
     .select()
@@ -34,7 +25,6 @@ async function generateCardId(
 }
 
 export default async (req: Request, context: Context) => {
-  const db = getDb();
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
   // /api/garden/cells or /api/garden/cells/:id
@@ -57,8 +47,7 @@ export default async (req: Request, context: Context) => {
       .select()
       .from(gardenCells)
       .where(eq(gardenCells.id, id));
-    if (!cell)
-      return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    if (!cell) return Response.json({ error: "Not found" }, { status: 404 });
 
     // Get season info
     const [season] = await db
@@ -90,8 +79,8 @@ export default async (req: Request, context: Context) => {
   if (req.method === "POST") {
     const body = await req.json();
     if (!body.plantType?.trim() || !body.seasonId) {
-      return new Response(
-        JSON.stringify({ error: "plantType and seasonId are required" }),
+      return Response.json(
+        { error: "plantType and seasonId are required" },
         { status: 400 }
       );
     }
@@ -100,7 +89,7 @@ export default async (req: Request, context: Context) => {
     const count = body.count || 1;
     const created = [];
     for (let i = 0; i < count; i++) {
-      const cardId = await generateCardId(db, body.seasonId);
+      const cardId = await generateCardId(body.seasonId);
       const [cell] = await db
         .insert(gardenCells)
         .values({
@@ -124,8 +113,8 @@ export default async (req: Request, context: Context) => {
   if (req.method === "PUT" && id) {
     const body = await req.json();
     if (!body.plantType?.trim()) {
-      return new Response(
-        JSON.stringify({ error: "plantType is required" }),
+      return Response.json(
+        { error: "plantType is required" },
         { status: 400 }
       );
     }
@@ -143,8 +132,7 @@ export default async (req: Request, context: Context) => {
       .where(eq(gardenCells.id, id))
       .returning();
 
-    if (!updated)
-      return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    if (!updated) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json(updated);
   }
 
@@ -153,16 +141,13 @@ export default async (req: Request, context: Context) => {
       .delete(gardenCells)
       .where(eq(gardenCells.id, id))
       .returning();
-    if (!deleted)
-      return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    if (!deleted) return Response.json({ error: "Not found" }, { status: 404 });
     return new Response(null, { status: 204 });
   }
 
-  return new Response(JSON.stringify({ error: "Method not allowed" }), {
-    status: 405,
-  });
+  return Response.json({ error: "Method not allowed" }, { status: 405 });
 };
 
-export const config = {
+export const config: Config = {
   path: ["/api/garden/cells", "/api/garden/cells/*"],
 };

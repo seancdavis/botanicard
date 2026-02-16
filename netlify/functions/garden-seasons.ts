@@ -1,10 +1,8 @@
-import type { Context } from "@netlify/functions";
+import type { Config, Context } from "@netlify/functions";
 import { eq, desc, sql } from "drizzle-orm";
-import { getDb } from "./_shared/db.js";
-import { gardenSeasons, gardenCells } from "./_shared/schema.js";
+import { db, gardenSeasons, gardenCells } from "../../db";
 
 export default async (req: Request, context: Context) => {
-  const db = getDb();
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
   // /api/garden/seasons or /api/garden/seasons/:id
@@ -35,8 +33,7 @@ export default async (req: Request, context: Context) => {
       .select()
       .from(gardenSeasons)
       .where(eq(gardenSeasons.id, id));
-    if (!season)
-      return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    if (!season) return Response.json({ error: "Not found" }, { status: 404 });
 
     const cells = await db
       .select()
@@ -50,8 +47,8 @@ export default async (req: Request, context: Context) => {
   if (req.method === "POST") {
     const body = await req.json();
     if (!body.name?.trim() || !body.year) {
-      return new Response(
-        JSON.stringify({ error: "Name and year are required" }),
+      return Response.json(
+        { error: "Name and year are required" },
         { status: 400 }
       );
     }
@@ -71,8 +68,8 @@ export default async (req: Request, context: Context) => {
   if (req.method === "PUT" && id) {
     const body = await req.json();
     if (!body.name?.trim() || !body.year) {
-      return new Response(
-        JSON.stringify({ error: "Name and year are required" }),
+      return Response.json(
+        { error: "Name and year are required" },
         { status: 400 }
       );
     }
@@ -87,8 +84,7 @@ export default async (req: Request, context: Context) => {
       .where(eq(gardenSeasons.id, id))
       .returning();
 
-    if (!updated)
-      return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    if (!updated) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json(updated);
   }
 
@@ -97,16 +93,13 @@ export default async (req: Request, context: Context) => {
       .delete(gardenSeasons)
       .where(eq(gardenSeasons.id, id))
       .returning();
-    if (!deleted)
-      return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    if (!deleted) return Response.json({ error: "Not found" }, { status: 404 });
     return new Response(null, { status: 204 });
   }
 
-  return new Response(JSON.stringify({ error: "Method not allowed" }), {
-    status: 405,
-  });
+  return Response.json({ error: "Method not allowed" }, { status: 405 });
 };
 
-export const config = {
+export const config: Config = {
   path: ["/api/garden/seasons", "/api/garden/seasons/*"],
 };

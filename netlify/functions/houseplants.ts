@@ -1,9 +1,8 @@
-import type { Context } from "@netlify/functions";
+import type { Config, Context } from "@netlify/functions";
 import { eq, desc, sql } from "drizzle-orm";
-import { getDb } from "./_shared/db.js";
-import { houseplants, planters, notes, photos } from "./_shared/schema.js";
+import { db, houseplants, planters, notes, photos } from "../../db";
 
-async function generateCardId(db: ReturnType<typeof getDb>): Promise<string> {
+async function generateCardId(): Promise<string> {
   const [result] = await db
     .select({ maxId: sql<string>`MAX(card_id)` })
     .from(houseplants);
@@ -12,7 +11,6 @@ async function generateCardId(db: ReturnType<typeof getDb>): Promise<string> {
 }
 
 export default async (req: Request, context: Context) => {
-  const db = getDb();
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
   // /api/houseplants or /api/houseplants/:id
@@ -31,7 +29,7 @@ export default async (req: Request, context: Context) => {
       .select()
       .from(houseplants)
       .where(eq(houseplants.id, id));
-    if (!plant) return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    if (!plant) return Response.json({ error: "Not found" }, { status: 404 });
 
     // Get related data
     const children = await db
@@ -87,12 +85,10 @@ export default async (req: Request, context: Context) => {
   if (req.method === "POST") {
     const body = await req.json();
     if (!body.name?.trim()) {
-      return new Response(JSON.stringify({ error: "Name is required" }), {
-        status: 400,
-      });
+      return Response.json({ error: "Name is required" }, { status: 400 });
     }
 
-    const cardId = await generateCardId(db);
+    const cardId = await generateCardId();
     const [created] = await db
       .insert(houseplants)
       .values({
@@ -111,9 +107,7 @@ export default async (req: Request, context: Context) => {
   if (req.method === "PUT" && id) {
     const body = await req.json();
     if (!body.name?.trim()) {
-      return new Response(JSON.stringify({ error: "Name is required" }), {
-        status: 400,
-      });
+      return Response.json({ error: "Name is required" }, { status: 400 });
     }
 
     const [updated] = await db
@@ -129,7 +123,7 @@ export default async (req: Request, context: Context) => {
       .where(eq(houseplants.id, id))
       .returning();
 
-    if (!updated) return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    if (!updated) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json(updated);
   }
 
@@ -138,15 +132,13 @@ export default async (req: Request, context: Context) => {
       .delete(houseplants)
       .where(eq(houseplants.id, id))
       .returning();
-    if (!deleted) return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    if (!deleted) return Response.json({ error: "Not found" }, { status: 404 });
     return new Response(null, { status: 204 });
   }
 
-  return new Response(JSON.stringify({ error: "Method not allowed" }), {
-    status: 405,
-  });
+  return Response.json({ error: "Method not allowed" }, { status: 405 });
 };
 
-export const config = {
+export const config: Config = {
   path: ["/api/houseplants", "/api/houseplants/*"],
 };

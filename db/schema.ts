@@ -1,6 +1,5 @@
 import {
   pgTable,
-  serial,
   varchar,
   text,
   integer,
@@ -8,7 +7,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const approvedUsers = pgTable("approved_users", {
-  id: serial("id").primaryKey(),
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }),
   isAdmin: integer("is_admin").default(0).notNull(),
@@ -18,7 +17,7 @@ export const approvedUsers = pgTable("approved_users", {
 });
 
 export const houseplants = pgTable("houseplants", {
-  id: serial("id").primaryKey(),
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   cardId: varchar("card_id", { length: 4 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
@@ -30,7 +29,7 @@ export const houseplants = pgTable("houseplants", {
 });
 
 export const planters = pgTable("planters", {
-  id: serial("id").primaryKey(),
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   cardId: varchar("card_id", { length: 10 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
@@ -40,7 +39,7 @@ export const planters = pgTable("planters", {
 });
 
 export const gardenSeasons = pgTable("garden_seasons", {
-  id: serial("id").primaryKey(),
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: varchar("name", { length: 255 }).notNull(),
   year: integer("year").notNull(),
   description: text("description"),
@@ -48,7 +47,7 @@ export const gardenSeasons = pgTable("garden_seasons", {
 });
 
 export const gardenCells = pgTable("garden_cells", {
-  id: serial("id").primaryKey(),
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   cardId: varchar("card_id", { length: 20 }).notNull().unique(),
   seasonId: integer("season_id").notNull(),
   plantType: varchar("plant_type", { length: 255 }).notNull(),
@@ -61,7 +60,7 @@ export const gardenCells = pgTable("garden_cells", {
 });
 
 export const notes = pgTable("notes", {
-  id: serial("id").primaryKey(),
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   entityType: varchar("entity_type", { length: 50 }).notNull(),
   entityId: integer("entity_id").notNull(),
   content: text("content"),
@@ -69,7 +68,7 @@ export const notes = pgTable("notes", {
 });
 
 export const photos = pgTable("photos", {
-  id: serial("id").primaryKey(),
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   noteId: integer("note_id").notNull(),
   blobKey: varchar("blob_key", { length: 500 }).notNull(),
   filename: varchar("filename", { length: 255 }),

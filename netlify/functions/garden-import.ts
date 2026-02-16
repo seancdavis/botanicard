@@ -1,18 +1,14 @@
-import type { Context } from "@netlify/functions";
+import type { Config, Context } from "@netlify/functions";
 import { eq, sql, desc } from "drizzle-orm";
-import { getDb } from "./_shared/db.js";
-import { gardenCells, gardenSeasons, notes } from "./_shared/schema.js";
+import { db, gardenCells, gardenSeasons, notes } from "../../db";
 
 export default async (req: Request, context: Context) => {
-  const db = getDb();
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
   const action = pathParts[3]; // "process" or "confirm"
 
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-    });
+    return Response.json({ error: "Method not allowed" }, { status: 405 });
   }
 
   // POST /api/garden/import/process
@@ -21,10 +17,8 @@ export default async (req: Request, context: Context) => {
     const { seasonId, transcription } = body;
 
     if (!seasonId || !transcription?.trim()) {
-      return new Response(
-        JSON.stringify({
-          error: "seasonId and transcription are required",
-        }),
+      return Response.json(
+        { error: "seasonId and transcription are required" },
         { status: 400 }
       );
     }
@@ -36,9 +30,7 @@ export default async (req: Request, context: Context) => {
       .where(eq(gardenSeasons.id, seasonId));
 
     if (!season) {
-      return new Response(JSON.stringify({ error: "Season not found" }), {
-        status: 404,
-      });
+      return Response.json({ error: "Season not found" }, { status: 404 });
     }
 
     const cells = await db
@@ -100,10 +92,7 @@ Match plant references to existing cells by card_id or plant type. If the transc
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI API error:", errText);
-      return new Response(
-        JSON.stringify({ error: "AI processing failed" }),
-        { status: 500 }
-      );
+      return Response.json({ error: "AI processing failed" }, { status: 500 });
     }
 
     const aiData = await aiResponse.json();
@@ -114,11 +103,8 @@ Match plant references to existing cells by card_id or plant type. If the transc
     try {
       parsed = JSON.parse(responseText);
     } catch {
-      return new Response(
-        JSON.stringify({
-          error: "Failed to parse AI response",
-          raw: responseText,
-        }),
+      return Response.json(
+        { error: "Failed to parse AI response", raw: responseText },
         { status: 500 }
       );
     }
@@ -142,8 +128,8 @@ Match plant references to existing cells by card_id or plant type. If the transc
     const { updates } = body;
 
     if (!updates || !Array.isArray(updates)) {
-      return new Response(
-        JSON.stringify({ error: "updates array is required" }),
+      return Response.json(
+        { error: "updates array is required" },
         { status: 400 }
       );
     }
@@ -189,11 +175,9 @@ Match plant references to existing cells by card_id or plant type. If the transc
     });
   }
 
-  return new Response(JSON.stringify({ error: "Unknown action" }), {
-    status: 400,
-  });
+  return Response.json({ error: "Unknown action" }, { status: 400 });
 };
 
-export const config = {
+export const config: Config = {
   path: "/api/garden/import/*",
 };
