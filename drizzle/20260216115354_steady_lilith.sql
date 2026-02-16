@@ -1,16 +1,5 @@
-CREATE TABLE "approved_users" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"email" varchar(255) NOT NULL,
-	"name" varchar(255),
-	"is_admin" integer DEFAULT 0 NOT NULL,
-	"added_at" timestamp DEFAULT now() NOT NULL,
-	"added_by" varchar(255),
-	"notes" text,
-	CONSTRAINT "approved_users_email_unique" UNIQUE("email")
-);
---> statement-breakpoint
 CREATE TABLE "garden_cells" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "garden_cells_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"card_id" varchar(20) NOT NULL,
 	"season_id" integer NOT NULL,
 	"plant_type" varchar(255) NOT NULL,
@@ -24,7 +13,7 @@ CREATE TABLE "garden_cells" (
 );
 --> statement-breakpoint
 CREATE TABLE "garden_seasons" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "garden_seasons_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" varchar(255) NOT NULL,
 	"year" integer NOT NULL,
 	"description" text,
@@ -32,7 +21,7 @@ CREATE TABLE "garden_seasons" (
 );
 --> statement-breakpoint
 CREATE TABLE "houseplants" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "houseplants_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"card_id" varchar(4) NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"description" text,
@@ -45,7 +34,7 @@ CREATE TABLE "houseplants" (
 );
 --> statement-breakpoint
 CREATE TABLE "notes" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "notes_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"entity_type" varchar(50) NOT NULL,
 	"entity_id" integer NOT NULL,
 	"content" text,
@@ -53,7 +42,7 @@ CREATE TABLE "notes" (
 );
 --> statement-breakpoint
 CREATE TABLE "photos" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "photos_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"note_id" integer NOT NULL,
 	"blob_key" varchar(500) NOT NULL,
 	"filename" varchar(255),
@@ -62,7 +51,7 @@ CREATE TABLE "photos" (
 );
 --> statement-breakpoint
 CREATE TABLE "planters" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "planters_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"card_id" varchar(10) NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"description" text,

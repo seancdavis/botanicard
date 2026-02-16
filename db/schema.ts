@@ -6,16 +6,6 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-export const approvedUsers = pgTable("approved_users", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  name: varchar("name", { length: 255 }),
-  isAdmin: integer("is_admin").default(0).notNull(),
-  addedAt: timestamp("added_at").defaultNow().notNull(),
-  addedBy: varchar("added_by", { length: 255 }),
-  notes: text("notes"),
-});
-
 export const houseplants = pgTable("houseplants", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   cardId: varchar("card_id", { length: 4 }).notNull().unique(),
