@@ -1,5 +1,5 @@
 import { useNavigate, Link } from "react-router-dom";
-import { Plus, Leaf } from "@phosphor-icons/react";
+import { Plus, Leaf, WarningCircle } from "@phosphor-icons/react";
 import { useData } from "../../lib/useData";
 import { Card } from "../../components/Card";
 import { CardGridSkeleton } from "../../components/Skeleton";
@@ -15,7 +15,7 @@ interface Season {
 }
 
 export function SeasonList() {
-  const { data: seasons, loading } = useData<Season[]>("/garden/seasons");
+  const { data: seasons, loading, error } = useData<Season[]>("/garden/seasons");
   const navigate = useNavigate();
 
   return (
@@ -34,6 +34,14 @@ export function SeasonList() {
       />
 
       {loading && <CardGridSkeleton count={4} />}
+
+      {error && (
+        <EmptyState
+          icon={<WarningCircle size={48} weight="light" />}
+          title="Failed to load seasons"
+          description={error}
+        />
+      )}
 
       {seasons && seasons.length === 0 && (
         <EmptyState

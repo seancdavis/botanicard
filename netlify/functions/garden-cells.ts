@@ -25,6 +25,7 @@ async function generateCardId(seasonId: number): Promise<string> {
 }
 
 export default async (req: Request, context: Context) => {
+  try {
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
   // /api/garden/cells or /api/garden/cells/:id
@@ -46,7 +47,7 @@ export default async (req: Request, context: Context) => {
       primaryPhotoBlobKey: sql<string | null>`(
         SELECT p.blob_key FROM photos p
         INNER JOIN notes n ON n.id = p.note_id
-        WHERE n.entity_type = 'garden_cell' AND n.entity_id = ${gardenCells.id}
+        WHERE n.entity_type = 'garden_cell' AND n.entity_id = "garden_cells"."id"
         ORDER BY n.created_at DESC LIMIT 1
       )`,
     };
@@ -170,6 +171,13 @@ export default async (req: Request, context: Context) => {
   }
 
   return Response.json({ error: "Method not allowed" }, { status: 405 });
+  } catch (err) {
+    console.error("Garden cells API error:", err);
+    return Response.json(
+      { error: err instanceof Error ? err.message : "Internal server error" },
+      { status: 500 }
+    );
+  }
 };
 
 export const config: Config = {

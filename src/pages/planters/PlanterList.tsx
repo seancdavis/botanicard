@@ -1,5 +1,5 @@
 import { useNavigate, Link } from "react-router-dom";
-import { Plus, PottedPlant } from "@phosphor-icons/react";
+import { Plus, PottedPlant, WarningCircle } from "@phosphor-icons/react";
 import { useData } from "../../lib/useData";
 import { Card } from "../../components/Card";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -17,7 +17,7 @@ interface Planter {
 }
 
 export function PlanterList() {
-  const { data: planterList, loading } = useData<Planter[]>("/planters");
+  const { data: planterList, loading, error } = useData<Planter[]>("/planters");
   const navigate = useNavigate();
 
   return (
@@ -35,6 +35,14 @@ export function PlanterList() {
       />
 
       {loading && <CardGridSkeleton />}
+
+      {error && (
+        <EmptyState
+          icon={<WarningCircle size={48} weight="light" />}
+          title="Failed to load planters"
+          description={error}
+        />
+      )}
 
       {!loading && planterList && planterList.length === 0 && (
         <EmptyState

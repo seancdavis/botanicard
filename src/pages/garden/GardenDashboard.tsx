@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Leaf } from "@phosphor-icons/react";
+import { Leaf, WarningCircle } from "@phosphor-icons/react";
 import { useData } from "../../lib/useData";
 import { Card } from "../../components/Card";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -24,7 +24,7 @@ interface Cell {
 }
 
 export function GardenDashboard() {
-  const { data: seasons, loading: seasonsLoading } =
+  const { data: seasons, loading: seasonsLoading, error: seasonsError } =
     useData<Season[]>("/garden/seasons");
 
   const latestSeason = seasons?.[0];
@@ -48,7 +48,15 @@ export function GardenDashboard() {
 
       {seasonsLoading && <CardGridSkeleton count={3} />}
 
-      {!seasonsLoading && !latestSeason && (
+      {seasonsError && (
+        <EmptyState
+          icon={<WarningCircle size={48} weight="light" />}
+          title="Failed to load garden"
+          description={seasonsError}
+        />
+      )}
+
+      {!seasonsLoading && !seasonsError && !latestSeason && (
         <EmptyState
           icon={<Leaf size={48} weight="light" />}
           title="No seasons yet"
