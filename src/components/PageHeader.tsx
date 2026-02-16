@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "@phosphor-icons/react";
 
@@ -10,6 +10,13 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, backTo, actions }: PageHeaderProps) {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = `${title} | Botanicard`;
+    return () => {
+      document.title = "Botanicard";
+    };
+  }, [title]);
 
   return (
     <div className="flex items-center justify-between mb-6">

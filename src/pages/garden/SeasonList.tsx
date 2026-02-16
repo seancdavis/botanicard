@@ -1,9 +1,10 @@
 import { useNavigate, Link } from "react-router-dom";
-import { Plus } from "@phosphor-icons/react";
+import { Plus, Leaf } from "@phosphor-icons/react";
 import { useData } from "../../lib/useData";
 import { Card } from "../../components/Card";
 import { CardGridSkeleton } from "../../components/Skeleton";
 import { PageHeader } from "../../components/PageHeader";
+import { EmptyState } from "../../components/EmptyState";
 
 interface Season {
   id: number;
@@ -33,6 +34,22 @@ export function SeasonList() {
       />
 
       {loading && <CardGridSkeleton count={4} />}
+
+      {seasons && seasons.length === 0 && (
+        <EmptyState
+          icon={<Leaf size={48} weight="light" />}
+          title="No seasons yet"
+          description="Create your first season to start tracking your garden."
+          action={
+            <Link
+              to="/garden/seasons/new"
+              className="inline-block bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90"
+            >
+              Create Season
+            </Link>
+          }
+        />
+      )}
 
       {seasons && seasons.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

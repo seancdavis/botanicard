@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
+import { Leaf } from "@phosphor-icons/react";
 import { useData } from "../../lib/useData";
 import { Card } from "../../components/Card";
 import { StatusBadge } from "../../components/StatusBadge";
 import { CardGridSkeleton } from "../../components/Skeleton";
 import { PageHeader } from "../../components/PageHeader";
+import { EmptyState } from "../../components/EmptyState";
 
 interface Season {
   id: number;
@@ -47,20 +49,19 @@ export function GardenDashboard() {
       {seasonsLoading && <CardGridSkeleton count={3} />}
 
       {!seasonsLoading && !latestSeason && (
-        <div className="text-center py-16">
-          <h3 className="text-lg font-medium text-text/70 mb-1">
-            No seasons yet
-          </h3>
-          <p className="text-sm text-text/50 mb-4">
-            Create your first season to start tracking your garden.
-          </p>
-          <Link
-            to="/garden/seasons/new"
-            className="inline-block bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90"
-          >
-            Create Season
-          </Link>
-        </div>
+        <EmptyState
+          icon={<Leaf size={48} weight="light" />}
+          title="No seasons yet"
+          description="Create your first season to start tracking your garden."
+          action={
+            <Link
+              to="/garden/seasons/new"
+              className="inline-block bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90"
+            >
+              Create Season
+            </Link>
+          }
+        />
       )}
 
       {latestSeason && (
@@ -86,9 +87,19 @@ export function GardenDashboard() {
           {cellsLoading && <CardGridSkeleton />}
 
           {cells && cells.length === 0 && (
-            <div className="text-center py-12 text-text/50">
-              <p>No cells in this season yet.</p>
-            </div>
+            <EmptyState
+              icon={<Leaf size={48} weight="light" />}
+              title="No cells in this season yet"
+              description="Add cells to start tracking plants in this season."
+              action={
+                <Link
+                  to={`/garden/cells/new?season=${latestSeason.id}`}
+                  className="inline-block bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90"
+                >
+                  Add Cells
+                </Link>
+              }
+            />
           )}
 
           {cells && cells.length > 0 && (

@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Trash } from "@phosphor-icons/react";
+import { Trash, Leaf } from "@phosphor-icons/react";
 import { useData } from "../../lib/useData";
 import { useToast } from "../../contexts/ToastContext";
 import { api } from "../../lib/api";
@@ -8,6 +8,7 @@ import { StatusBadge } from "../../components/StatusBadge";
 import { CardGridSkeleton } from "../../components/Skeleton";
 import { PageHeader } from "../../components/PageHeader";
 import { Skeleton } from "../../components/Skeleton";
+import { EmptyState } from "../../components/EmptyState";
 
 interface Cell {
   id: number;
@@ -86,15 +87,19 @@ export function SeasonDetail() {
       )}
 
       {season.cells.length === 0 ? (
-        <div className="text-center py-12 text-text/50">
-          <p>No cells yet.</p>
-          <Link
-            to={`/garden/cells/new?season=${season.id}`}
-            className="inline-block mt-3 bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90"
-          >
-            Add Cells
-          </Link>
-        </div>
+        <EmptyState
+          icon={<Leaf size={48} weight="light" />}
+          title="No cells yet"
+          description="Add cells to start tracking plants in this season."
+          action={
+            <Link
+              to={`/garden/cells/new?season=${season.id}`}
+              className="inline-block bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90"
+            >
+              Add Cells
+            </Link>
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {season.cells.map((cell) => (
