@@ -26,10 +26,9 @@ src/
     planters/
     garden/
   lib/             # Utilities (api client, hooks)
-  contexts/        # React contexts (auth, toast)
+  contexts/        # React contexts (toast)
 netlify/
   functions/       # API endpoints (Netlify Functions)
-    _shared/       # Shared auth utilities
 drizzle/           # Migration files
 ```
 

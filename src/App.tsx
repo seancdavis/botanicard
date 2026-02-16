@@ -1,5 +1,4 @@
 import { Routes, Route } from "react-router-dom";
-import { RequireAuth } from "./components/RequireAuth";
 import { Layout } from "./components/Layout";
 import { Dashboard } from "./pages/Dashboard";
 import { HouseplantList } from "./pages/houseplants/HouseplantList";
@@ -21,31 +20,29 @@ import { GardenImport } from "./pages/garden/GardenImport";
 
 export default function App() {
   return (
-    <RequireAuth>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<Dashboard />} />
 
-          <Route path="/houseplants" element={<HouseplantList />} />
-          <Route path="/houseplants/new" element={<HouseplantNew />} />
-          <Route path="/houseplants/:id" element={<HouseplantDetail />} />
-          <Route path="/houseplants/:id/edit" element={<HouseplantEdit />} />
+        <Route path="/houseplants" element={<HouseplantList />} />
+        <Route path="/houseplants/new" element={<HouseplantNew />} />
+        <Route path="/houseplants/:id" element={<HouseplantDetail />} />
+        <Route path="/houseplants/:id/edit" element={<HouseplantEdit />} />
 
-          <Route path="/planters" element={<PlanterList />} />
-          <Route path="/planters/new" element={<PlanterNew />} />
-          <Route path="/planters/:id" element={<PlanterDetail />} />
-          <Route path="/planters/:id/edit" element={<PlanterEdit />} />
+        <Route path="/planters" element={<PlanterList />} />
+        <Route path="/planters/new" element={<PlanterNew />} />
+        <Route path="/planters/:id" element={<PlanterDetail />} />
+        <Route path="/planters/:id/edit" element={<PlanterEdit />} />
 
-          <Route path="/garden" element={<GardenDashboard />} />
-          <Route path="/garden/seasons" element={<SeasonList />} />
-          <Route path="/garden/seasons/new" element={<SeasonNew />} />
-          <Route path="/garden/seasons/:id" element={<SeasonDetail />} />
-          <Route path="/garden/cells/new" element={<CellNew />} />
-          <Route path="/garden/cells/:id" element={<CellDetail />} />
-          <Route path="/garden/cells/:id/edit" element={<CellEdit />} />
-          <Route path="/garden/import" element={<GardenImport />} />
-        </Route>
-      </Routes>
-    </RequireAuth>
+        <Route path="/garden" element={<GardenDashboard />} />
+        <Route path="/garden/seasons" element={<SeasonList />} />
+        <Route path="/garden/seasons/new" element={<SeasonNew />} />
+        <Route path="/garden/seasons/:id" element={<SeasonDetail />} />
+        <Route path="/garden/cells/new" element={<CellNew />} />
+        <Route path="/garden/cells/:id" element={<CellDetail />} />
+        <Route path="/garden/cells/:id/edit" element={<CellEdit />} />
+        <Route path="/garden/import" element={<GardenImport />} />
+      </Route>
+    </Routes>
   );
 }
