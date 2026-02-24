@@ -126,10 +126,10 @@ export function Dashboard() {
             </Link>
             <Link
               to="/garden/import"
-              className="bg-accent text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90 flex items-center gap-2"
+              className="bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90 flex items-center gap-2"
             >
               <Upload size={16} weight="light" />
-              Garden Import
+              Garden Import Log
             </Link>
           </div>
         </>

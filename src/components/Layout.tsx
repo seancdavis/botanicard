@@ -6,7 +6,7 @@ const navItems = [
   { to: "/houseplants", label: "Houseplants", icon: Plant },
   { to: "/planters", label: "Planters", icon: PottedPlant },
   { to: "/garden", label: "Garden", icon: Leaf },
-  { to: "/garden/import", label: "Import", icon: Upload },
+  { to: "/garden/import", label: "Import Log", icon: Upload },
 ];
 
 export function Layout() {
