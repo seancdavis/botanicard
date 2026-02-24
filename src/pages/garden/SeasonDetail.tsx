@@ -1,8 +1,6 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { Trash, Leaf } from "@phosphor-icons/react";
+import { useParams, Link } from "react-router-dom";
+import { Leaf, Plus, Upload } from "@phosphor-icons/react";
 import { useData } from "../../lib/useData";
-import { useToast } from "../../contexts/ToastContext";
-import { api } from "../../lib/api";
 import { Card } from "../../components/Card";
 import { StatusBadge } from "../../components/StatusBadge";
 import { CardGridSkeleton } from "../../components/Skeleton";
@@ -29,22 +27,9 @@ interface SeasonDetailData {
 
 export function SeasonDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { addToast } = useToast();
   const { data: season, loading } = useData<SeasonDetailData>(
     `/garden/seasons/${id}`
   );
-
-  const handleDelete = async () => {
-    if (!confirm("Delete this season and all its cells?")) return;
-    try {
-      await api.delete(`/garden/seasons/${id}`);
-      addToast("Season deleted");
-      navigate("/garden/seasons");
-    } catch (err) {
-      addToast(err instanceof Error ? err.message : "Failed to delete", "error");
-    }
-  };
 
   if (loading) {
     return (
@@ -67,17 +52,25 @@ export function SeasonDetail() {
         actions={
           <div className="flex gap-2">
             <Link
-              to={`/garden/cells/new?season=${season.id}`}
-              className="bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90"
+              to="/garden/seasons"
+              className="border border-border rounded-md px-4 py-2 text-sm hover:bg-canvas"
             >
+              All Seasons
+            </Link>
+            <Link
+              to={`/garden/cells/new?season=${season.id}`}
+              className="bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90 flex items-center gap-2"
+            >
+              <Plus size={16} weight="light" />
               Add Cells
             </Link>
-            <button
-              onClick={handleDelete}
-              className="text-text/40 hover:text-red-500 transition-colors"
+            <Link
+              to="/garden/import"
+              className="bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90 flex items-center gap-2"
             >
-              <Trash size={20} weight="light" />
-            </button>
+              <Upload size={16} weight="light" />
+              Import Log
+            </Link>
           </div>
         }
       />

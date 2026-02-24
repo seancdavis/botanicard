@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash } from "@phosphor-icons/react";
+import { Trash, Camera, X } from "@phosphor-icons/react";
 import { api } from "../../lib/api";
 import { useData } from "../../lib/useData";
 import { useToast } from "../../contexts/ToastContext";
@@ -27,6 +27,12 @@ interface ProcessResult {
   updates: ImportUpdate[];
 }
 
+interface UploadedPhoto {
+  key: string;
+  filename: string;
+  previewUrl: string;
+}
+
 export function GardenImport() {
   const navigate = useNavigate();
   const { addToast } = useToast();
@@ -37,15 +43,15 @@ export function GardenImport() {
   const [transcription, setTranscription] = useState("");
   const [processing, setProcessing] = useState(false);
 
+  // Photos (available during input and review)
+  const [uploadedPhotos, setUploadedPhotos] = useState<UploadedPhoto[]>([]);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
   // Step 2: Review
   const [result, setResult] = useState<ProcessResult | null>(null);
   const [editableUpdates, setEditableUpdates] = useState<ImportUpdate[]>([]);
   const [confirming, setConfirming] = useState(false);
-
-  // Step 3: Photo upload
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleProcess = async () => {
     if (!seasonId || !transcription.trim()) return;
@@ -68,18 +74,98 @@ export function GardenImport() {
     }
   };
 
+  const handlePhotoSelect = async (files: FileList) => {
+    setPhotoUploading(true);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/photos/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) continue;
+        const { key } = await res.json();
+
+        setUploadedPhotos((prev) => [
+          ...prev,
+          {
+            key,
+            filename: file.name,
+            previewUrl: URL.createObjectURL(file),
+          },
+        ]);
+      } catch {
+        // Skip failed uploads
+      }
+    }
+    setPhotoUploading(false);
+  };
+
+  const removePhoto = (index: number) => {
+    setUploadedPhotos((prev) => {
+      const removed = prev[index];
+      if (removed) URL.revokeObjectURL(removed.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const getMatchedCell = (filename: string) => {
+    if (!result) return null;
+    const nameWithoutExt = filename.replace(/\.[^.]+$/, "");
+    const cardIdMatch = nameWithoutExt.match(/^(\d{2}-\d{3})/);
+    if (!cardIdMatch) return null;
+    return result.cells.find((c) => c.cardId === cardIdMatch[1]) || null;
+  };
+
   const handleConfirm = async () => {
     setConfirming(true);
     try {
+      // Save text updates
       const data = await api.post<{
         notesCreated: number;
         statusUpdates: number;
       }>("/garden/import/confirm", {
         updates: editableUpdates.filter((u) => u.cardId),
       });
+
+      // Attach photos to matched cells
+      let photosMatched = 0;
+      if (result) {
+        for (const photo of uploadedPhotos) {
+          const cell = getMatchedCell(photo.filename);
+          if (!cell) continue;
+
+          try {
+            await api.post("/notes", {
+              entityType: "garden_cell",
+              entityId: cell.id,
+              content: `Photo: ${photo.filename}`,
+              photoKeys: [photo.key],
+            });
+            photosMatched++;
+          } catch {
+            // Skip failed
+          }
+        }
+      }
+
+      const parts = [];
+      if (data.notesCreated > 0) parts.push(`${data.notesCreated} notes`);
+      if (data.statusUpdates > 0)
+        parts.push(`${data.statusUpdates} status updates`);
+      if (photosMatched > 0) parts.push(`${photosMatched} photos`);
+
       addToast(
-        `Import complete: ${data.notesCreated} notes, ${data.statusUpdates} status updates`
+        parts.length > 0
+          ? `Import log saved: ${parts.join(", ")}`
+          : "Import log saved"
       );
+
+      // Clean up preview URLs
+      uploadedPhotos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+
       navigate(`/garden/seasons/${seasonId}`);
     } catch (err) {
       addToast(
@@ -107,61 +193,95 @@ export function GardenImport() {
     );
   };
 
-  const handlePhotoUpload = async (files: FileList) => {
-    if (!result) return;
-    setUploading(true);
+  const photoUploadSection = (
+    <Card className="p-5">
+      <h3 className="text-lg font-bold mb-2">Photos</h3>
+      <p className="text-sm text-text/60 mb-3">
+        Attach photos with filenames matching cell IDs (e.g.,{" "}
+        <code className="text-xs bg-canvas px-1 py-0.5 rounded">
+          26-001.jpg
+        </code>
+        ). Each photo uploads immediately and is matched to the corresponding
+        cell.
+      </p>
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files?.length) handlePhotoSelect(e.target.files);
+          e.target.value = "";
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => photoInputRef.current?.click()}
+        disabled={photoUploading}
+        className="bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+      >
+        <Camera size={16} weight="light" />
+        {photoUploading ? "Uploading..." : "Add Photos"}
+      </button>
 
-    let matched = 0;
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      setUploadProgress(`Uploading ${i + 1}/${files.length}: ${file.name}`);
-
-      // Parse card_id from filename (e.g., "26-001.jpg" or "26-001-2.jpg")
-      const nameWithoutExt = file.name.replace(/\.[^.]+$/, "");
-      const cardIdMatch = nameWithoutExt.match(/^(\d{2}-\d{3})/);
-      if (!cardIdMatch) continue;
-
-      const cardId = cardIdMatch[1];
-      const cell = result.cells.find((c) => c.cardId === cardId);
-      if (!cell) continue;
-
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-        const uploadRes = await fetch("/api/photos/upload", {
-          method: "POST",
-          body: formData,
-        });
-        if (!uploadRes.ok) continue;
-        const { key } = await uploadRes.json();
-
-        await api.post("/notes", {
-          entityType: "garden_cell",
-          entityId: cell.id,
-          content: `Photo: ${file.name}`,
-          photoKeys: [key],
-        });
-        matched++;
-      } catch {
-        // Skip failed uploads
-      }
-    }
-
-    setUploading(false);
-    setUploadProgress("");
-    addToast(`${matched} photo${matched !== 1 ? "s" : ""} uploaded and matched`);
-  };
+      {uploadedPhotos.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
+          {uploadedPhotos.map((photo, i) => {
+            const matchedCell = result ? getMatchedCell(photo.filename) : null;
+            return (
+              <div
+                key={photo.key}
+                className="relative rounded-lg overflow-hidden border border-border"
+              >
+                <img
+                  src={photo.previewUrl}
+                  alt={photo.filename}
+                  className="w-full h-24 object-cover"
+                />
+                <div className="p-2">
+                  <p className="text-xs font-mono text-text/60 truncate">
+                    {photo.filename}
+                  </p>
+                  {result && (
+                    <p
+                      className={`text-xs mt-0.5 ${
+                        matchedCell
+                          ? "text-primary font-medium"
+                          : "text-orange-500"
+                      }`}
+                    >
+                      {matchedCell
+                        ? `${matchedCell.cardId} - ${matchedCell.plantType}`
+                        : "No match"}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => removePhoto(i)}
+                  className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-black/70"
+                >
+                  <X size={12} weight="bold" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
 
   // Show review screen if we have results
   if (result) {
     return (
       <div>
-        <PageHeader title="Review Import" backTo="/garden/import" />
+        <PageHeader title="Review Import Log" backTo="/garden/import" />
 
         <div className="space-y-4 mb-6">
           <p className="text-sm text-text/60">
-            {editableUpdates.length} update{editableUpdates.length !== 1 ? "s" : ""}{" "}
-            parsed from your transcription. Review and edit below.
+            {editableUpdates.length} update
+            {editableUpdates.length !== 1 ? "s" : ""} parsed from your
+            transcription. Review and edit below.
           </p>
 
           {editableUpdates.map((update, i) => (
@@ -221,15 +341,19 @@ export function GardenImport() {
           ))}
         </div>
 
-        <div className="flex gap-3 mb-8">
+        <div className="mb-6">{photoUploadSection}</div>
+
+        <div className="flex gap-3">
           <button
             onClick={handleConfirm}
             disabled={
-              confirming || editableUpdates.filter((u) => u.cardId).length === 0
+              confirming ||
+              (editableUpdates.filter((u) => u.cardId).length === 0 &&
+                uploadedPhotos.length === 0)
             }
             className="bg-primary text-white rounded-md px-6 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
           >
-            {confirming ? "Saving..." : "Confirm Import"}
+            {confirming ? "Saving..." : "Confirm Import Log"}
           </button>
           <button
             onClick={() => {
@@ -241,35 +365,6 @@ export function GardenImport() {
             Start Over
           </button>
         </div>
-
-        {/* Bulk Photo Upload */}
-        <Card className="p-5">
-          <h3 className="text-lg font-bold mb-2">Bulk Photo Upload</h3>
-          <p className="text-sm text-text/60 mb-3">
-            Upload photos with filenames matching cell IDs (e.g.,{" "}
-            <code className="text-xs bg-canvas px-1 py-0.5 rounded">
-              26-001.jpg
-            </code>
-            ). They'll be automatically matched to cells.
-          </p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files?.length) handlePhotoUpload(e.target.files);
-            }}
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="bg-accent text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
-          >
-            {uploading ? uploadProgress : "Select Photos"}
-          </button>
-        </Card>
       </div>
     );
   }
@@ -277,7 +372,7 @@ export function GardenImport() {
   // Input screen
   return (
     <div>
-      <PageHeader title="Garden Import" backTo="/garden" />
+      <PageHeader title="Garden Import Log" backTo="/garden" />
       <div className="max-w-2xl space-y-4">
         <p className="text-sm text-text/60">
           Paste a transcription of your garden notes. AI will parse them into
@@ -312,6 +407,8 @@ export function GardenImport() {
             className="w-full border border-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
+
+        <div>{photoUploadSection}</div>
 
         <button
           onClick={handleProcess}
