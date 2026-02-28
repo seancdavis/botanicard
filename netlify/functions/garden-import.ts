@@ -68,7 +68,9 @@ Current season: ${season.name} (${season.year})
 Existing cells:
 ${cellInfo || "(no cells yet)"}
 
-Return ONLY valid JSON (no markdown fences) matching this schema:
+**IMPORTANT: Return ONLY raw JSON. DO NOT wrap it in markdown code fences (\`\`\`). No prose, no explanation — just the JSON object.**
+
+Return valid JSON matching this schema:
 {
   "updates": [
     {
@@ -98,8 +100,9 @@ Match plant references to existing cells by card_id or plant type. If the transc
     }
 
     const aiData = await aiResponse.json();
-    const responseText =
-      aiData.content?.[0]?.text || "";
+    const responseText = (aiData.content?.[0]?.text || "")
+      .replace(/^```(?:json)?\s*\n?/, "")
+      .replace(/\n?```\s*$/, "");
 
     let parsed;
     try {
