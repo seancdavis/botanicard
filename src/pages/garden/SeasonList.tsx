@@ -26,9 +26,10 @@ export function SeasonList() {
         actions={
           <Link
             to="/garden/seasons/new"
-            className="bg-accent text-white rounded-full w-10 h-10 flex items-center justify-center hover:opacity-90 transition-opacity"
+            className="bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90 flex items-center gap-2"
           >
-            <Plus size={20} weight="bold" />
+            <Plus size={16} weight="light" />
+            New Season
           </Link>
         }
       />
