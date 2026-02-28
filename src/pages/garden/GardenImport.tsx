@@ -34,6 +34,9 @@ export function GardenImport() {
 
   // Step 1: Input
   const [seasonId, setSeasonId] = useState("");
+  const [observationDate, setObservationDate] = useState(
+    () => new Date().toISOString().split("T")[0]
+  );
   const [transcription, setTranscription] = useState("");
   const [processing, setProcessing] = useState(false);
 
@@ -76,6 +79,7 @@ export function GardenImport() {
         statusUpdates: number;
       }>("/garden/import/confirm", {
         updates: editableUpdates.filter((u) => u.cardId),
+        observationDate,
       });
       addToast(
         `Import complete: ${data.notesCreated} notes, ${data.statusUpdates} status updates`
@@ -140,6 +144,7 @@ export function GardenImport() {
           entityId: cell.id,
           content: `Photo: ${file.name}`,
           photoKeys: [key],
+          createdAt: observationDate,
         });
         matched++;
       } catch {
@@ -298,6 +303,18 @@ export function GardenImport() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Observation Date
+          </label>
+          <input
+            type="date"
+            value={observationDate}
+            onChange={(e) => setObservationDate(e.target.value)}
+            className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          />
         </div>
 
         <div>

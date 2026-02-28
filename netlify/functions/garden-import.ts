@@ -47,8 +47,10 @@ export default async (req: Request, context: Context) => {
       .join("\n");
 
     // Use AI Gateway to process the transcription
+    const baseUrl =
+      process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com";
     const aiResponse = await fetch(
-      "https://api.anthropic.com/v1/messages",
+      `${baseUrl}/v1/messages`,
       {
         method: "POST",
         headers: {
@@ -125,7 +127,7 @@ Match plant references to existing cells by card_id or plant type. If the transc
   // POST /api/garden/import/confirm
   if (action === "confirm") {
     const body = await req.json();
-    const { updates } = body;
+    const { updates, observationDate } = body;
 
     if (!updates || !Array.isArray(updates)) {
       return Response.json(
@@ -163,6 +165,9 @@ Match plant references to existing cells by card_id or plant type. If the transc
           entityType: "garden_cell",
           entityId: cell.id,
           content: update.note.trim(),
+          ...(observationDate
+            ? { createdAt: new Date(observationDate) }
+            : {}),
         });
         notesCreated++;
       }

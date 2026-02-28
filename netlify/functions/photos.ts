@@ -14,7 +14,7 @@ export default async (req: Request, context: Context) => {
     }
 
     const store = getStore("photos");
-    const key = `${Date.now()}-${file.name}`;
+    const key = `${crypto.randomUUID()}-${file.name}`;
     const buffer = await file.arrayBuffer();
     await store.set(key, new Uint8Array(buffer), {
       metadata: { contentType: file.type },

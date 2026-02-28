@@ -22,6 +22,7 @@ export default async (req: Request, context: Context) => {
         entityType: body.entityType,
         entityId: body.entityId,
         content: body.content || null,
+        ...(body.createdAt ? { createdAt: new Date(body.createdAt) } : {}),
       })
       .returning();
 
