@@ -10,18 +10,11 @@ import { AddNoteForm } from "../../components/AddNoteForm";
 import { PageHeader } from "../../components/PageHeader";
 import { Skeleton } from "../../components/Skeleton";
 
-interface Photo {
-  id: number;
-  blobKey: string;
-  filename?: string;
-  caption?: string;
-}
-
 interface Note {
   id: number;
   content?: string;
   createdAt: string;
-  photos?: Photo[];
+  photos?: { id: number; blobKey: string; filename?: string; caption?: string }[];
 }
 
 interface PlanterDetailData {
@@ -29,10 +22,10 @@ interface PlanterDetailData {
   cardId: string;
   name: string;
   description?: string;
+  photoBlobKey?: string | null;
   status: string;
   createdAt: string;
   currentPlants?: { id: number; cardId: string; name: string; status: string }[];
-  primaryPhoto?: Photo | null;
   notes: Note[];
 }
 
@@ -101,9 +94,9 @@ export function PlanterDetail() {
         }
       />
 
-      {planter.primaryPhoto && (
+      {planter.photoBlobKey && (
         <img
-          src={`/api/photos/${planter.primaryPhoto.blobKey}`}
+          src={`/api/photos/${planter.photoBlobKey}`}
           alt={planter.name}
           className="w-full h-64 object-cover rounded-xl mb-6"
         />

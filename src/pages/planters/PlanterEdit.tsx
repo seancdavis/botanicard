@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Camera, X } from "@phosphor-icons/react";
 import { api } from "../../lib/api";
 import { useData } from "../../lib/useData";
 import { useToast } from "../../contexts/ToastContext";
@@ -11,6 +12,7 @@ interface Planter {
   cardId: string;
   name: string;
   description?: string;
+  photoBlobKey?: string | null;
   status: string;
 }
 
@@ -23,15 +25,36 @@ export function PlanterEdit() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("active");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [existingBlobKey, setExistingBlobKey] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (planter) {
       setName(planter.name);
       setDescription(planter.description || "");
       setStatus(planter.status);
+      setExistingBlobKey(planter.photoBlobKey || null);
     }
   }, [planter]);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    setExistingBlobKey(null);
+  };
+
+  const clearPhoto = () => {
+    setPhotoFile(null);
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoPreview(null);
+    setExistingBlobKey(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   if (loading) {
     return (
@@ -46,16 +69,36 @@ export function PlanterEdit() {
     return <div className="text-text/50">Planter not found.</div>;
   }
 
+  const currentPhotoSrc = photoPreview
+    || (existingBlobKey ? `/api/photos/${existingBlobKey}` : null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     setSubmitting(true);
     try {
+      let photoBlobKey: string | null | undefined;
+      if (photoFile) {
+        const formData = new FormData();
+        formData.append("file", photoFile);
+        const res = await fetch("/api/photos/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) throw new Error("Photo upload failed");
+        const data = await res.json();
+        photoBlobKey = data.key;
+      } else if (!existingBlobKey && planter.photoBlobKey) {
+        // Photo was removed
+        photoBlobKey = null;
+      }
+
       await api.put(`/planters/${id}`, {
         name: name.trim(),
         description: description.trim() || undefined,
         status,
+        photoBlobKey,
       });
       addToast("Planter updated");
       navigate(`/planters/${id}`);
@@ -70,6 +113,41 @@ export function PlanterEdit() {
     <div>
       <PageHeader title={`Edit ${planter.name}`} backTo={`/planters/${id}`} />
       <form onSubmit={handleSubmit} className="max-w-lg space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Photo</label>
+          {currentPhotoSrc ? (
+            <div className="relative">
+              <img
+                src={currentPhotoSrc}
+                alt="Preview"
+                className="w-full h-48 object-cover rounded-lg"
+              />
+              <button
+                type="button"
+                onClick={clearPhoto}
+                className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70"
+              >
+                <X size={16} weight="bold" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 text-text/40 hover:text-text/60 hover:border-text/30 transition-colors"
+            >
+              <Camera size={24} weight="light" />
+              <span className="text-sm">Add photo</span>
+            </button>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoChange}
+          />
+        </div>
         <div>
           <label className="block text-sm font-medium mb-1">Name *</label>
           <input

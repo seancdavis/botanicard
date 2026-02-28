@@ -13,7 +13,7 @@ interface Planter {
   name: string;
   description?: string;
   status: string;
-  primaryPhotoBlobKey?: string | null;
+  photoBlobKey?: string | null;
 }
 
 export function PlanterList() {
@@ -69,9 +69,9 @@ export function PlanterList() {
               onClick={() => navigate(`/planters/${planter.id}`)}
               className="overflow-hidden"
             >
-              {planter.primaryPhotoBlobKey && (
+              {planter.photoBlobKey && (
                 <img
-                  src={`/api/photos/${planter.primaryPhotoBlobKey}`}
+                  src={`/api/photos/${planter.photoBlobKey}`}
                   alt={planter.name}
                   className="w-full h-40 object-cover"
                 />

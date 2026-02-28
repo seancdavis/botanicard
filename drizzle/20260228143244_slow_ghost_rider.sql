@@ -1,0 +1,1 @@
+ALTER TABLE "planters" ADD COLUMN "photo_blob_key" varchar(500);
