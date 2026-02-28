@@ -77,7 +77,7 @@ export function GardenImport() {
     }
   };
 
-  const handlePhotoSelect = async (files: FileList) => {
+  const handlePhotoSelect = async (files: File[]) => {
     setPhotoUploading(true);
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -216,7 +216,8 @@ export function GardenImport() {
         multiple
         className="hidden"
         onChange={(e) => {
-          if (e.target.files?.length) handlePhotoSelect(e.target.files);
+          if (e.target.files?.length)
+            handlePhotoSelect(Array.from(e.target.files));
           e.target.value = "";
         }}
       />
