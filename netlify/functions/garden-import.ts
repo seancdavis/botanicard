@@ -1,6 +1,6 @@
 import type { Config, Context } from "@netlify/functions";
 import { eq, sql, desc } from "drizzle-orm";
-import { db, gardenCells, gardenSeasons, notes } from "../../db";
+import { db, gardenCellGroups, gardenSeasons, notes } from "../../db";
 
 export default async (req: Request, context: Context) => {
   const url = new URL(req.url);
@@ -33,16 +33,16 @@ export default async (req: Request, context: Context) => {
       return Response.json({ error: "Season not found" }, { status: 404 });
     }
 
-    const cells = await db
+    const groups = await db
       .select()
-      .from(gardenCells)
-      .where(eq(gardenCells.seasonId, seasonId))
-      .orderBy(gardenCells.cardId);
+      .from(gardenCellGroups)
+      .where(eq(gardenCellGroups.seasonId, seasonId))
+      .orderBy(gardenCellGroups.cardId);
 
-    const cellInfo = cells
+    const groupInfo = groups
       .map(
-        (c) =>
-          `${c.cardId}: ${c.plantType}${c.variety ? ` (${c.variety})` : ""} — status: ${c.status}`
+        (g) =>
+          `${g.cardId}: ${g.plantType}${g.variety ? ` (${g.variety})` : ""} — status: ${g.status}`
       )
       .join("\n");
 
@@ -61,12 +61,12 @@ export default async (req: Request, context: Context) => {
         body: JSON.stringify({
           model: "claude-sonnet-4-5-20250929",
           max_tokens: 4096,
-          system: `You are a garden tracking assistant. Given a transcription of garden notes and a list of existing garden cells, parse the transcription into structured updates.
+          system: `You are a garden tracking assistant. Given a transcription of garden notes and a list of existing cell groups, parse the transcription into structured updates.
 
 Current season: ${season.name} (${season.year})
 
-Existing cells:
-${cellInfo || "(no cells yet)"}
+Existing cell groups:
+${groupInfo || "(no cell groups yet)"}
 
 **IMPORTANT: Return ONLY raw JSON. DO NOT wrap it in markdown code fences (\`\`\`). No prose, no explanation — just the JSON object.**
 
@@ -74,7 +74,7 @@ Return valid JSON matching this schema:
 {
   "updates": [
     {
-      "cardId": "string (existing cell card_id, or null for general notes)",
+      "cardId": "string (existing cell group card_id, or null for general notes)",
       "plantType": "string (the plant name)",
       "statusChange": "string or null (new status: seeded, sprouting, growing, transplanted, producing, harvested, dead)",
       "note": "string (observation or update text)"
@@ -82,7 +82,7 @@ Return valid JSON matching this schema:
   ]
 }
 
-Match plant references to existing cells by card_id or plant type. If the transcription mentions a plant not in the current cells, set cardId to null. Be concise in the note text — capture the essential observation.`,
+Match plant references to existing cell groups by card_id or plant type. If the transcription mentions a plant not in the current cell groups, set cardId to null. Be concise in the note text — capture the essential observation.`,
           messages: [
             {
               role: "user",
@@ -116,12 +116,12 @@ Match plant references to existing cells by card_id or plant type. If the transc
 
     return Response.json({
       season: { id: season.id, name: season.name },
-      cells: cells.map((c) => ({
-        id: c.id,
-        cardId: c.cardId,
-        plantType: c.plantType,
-        variety: c.variety,
-        status: c.status,
+      groups: groups.map((g) => ({
+        id: g.id,
+        cardId: g.cardId,
+        plantType: g.plantType,
+        variety: g.variety,
+        status: g.status,
       })),
       updates: parsed.updates || [],
     });
@@ -145,28 +145,28 @@ Match plant references to existing cells by card_id or plant type. If the transc
     for (const update of updates) {
       if (!update.cardId) continue;
 
-      // Find the cell
-      const [cell] = await db
+      // Find the cell group
+      const [group] = await db
         .select()
-        .from(gardenCells)
-        .where(eq(gardenCells.cardId, update.cardId));
+        .from(gardenCellGroups)
+        .where(eq(gardenCellGroups.cardId, update.cardId));
 
-      if (!cell) continue;
+      if (!group) continue;
 
       // Update status if changed
-      if (update.statusChange && update.statusChange !== cell.status) {
+      if (update.statusChange && update.statusChange !== group.status) {
         await db
-          .update(gardenCells)
+          .update(gardenCellGroups)
           .set({ status: update.statusChange, updatedAt: new Date() })
-          .where(eq(gardenCells.id, cell.id));
+          .where(eq(gardenCellGroups.id, group.id));
         statusUpdates++;
       }
 
       // Create note if text provided
       if (update.note?.trim()) {
         await db.insert(notes).values({
-          entityType: "garden_cell",
-          entityId: cell.id,
+          entityType: "garden_cell_group",
+          entityId: group.id,
           content: update.note.trim(),
           ...(observationDate
             ? { createdAt: new Date(observationDate) }
