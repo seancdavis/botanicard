@@ -20,6 +20,7 @@ interface Photo {
 interface Note {
   id: number;
   content?: string;
+  observedAt?: string | null;
   createdAt: string;
   photos?: Photo[];
 }

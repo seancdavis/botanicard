@@ -58,6 +58,7 @@ export const notes = pgTable("notes", {
   entityType: varchar("entity_type", { length: 50 }).notNull(),
   entityId: integer("entity_id").notNull(),
   content: text("content"),
+  observedAt: timestamp("observed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
