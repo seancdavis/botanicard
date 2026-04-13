@@ -144,7 +144,7 @@ export function HouseplantDetail() {
               onNoteAdded={refetch}
             />
             <div className="mt-4">
-              <NotesList notes={plant.notes} onDelete={handleDeleteNote} />
+              <NotesList notes={plant.notes} onDelete={handleDeleteNote} onNoteUpdated={refetch} />
             </div>
           </div>
         </div>

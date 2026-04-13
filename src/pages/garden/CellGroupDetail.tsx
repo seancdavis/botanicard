@@ -208,7 +208,7 @@ export function CellGroupDetail() {
               onNoteAdded={refetch}
             />
             <div className="mt-4">
-              <NotesList notes={group.notes} onDelete={handleDeleteNote} />
+              <NotesList notes={group.notes} onDelete={handleDeleteNote} onNoteUpdated={refetch} />
             </div>
           </div>
         </div>
