@@ -13,6 +13,7 @@ import { Skeleton } from "../../components/Skeleton";
 interface Note {
   id: number;
   content?: string;
+  observedAt?: string | null;
   createdAt: string;
   photos?: { id: number; blobKey: string; filename?: string; caption?: string }[];
 }

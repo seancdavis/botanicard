@@ -11,6 +11,9 @@ interface AddNoteFormProps {
 
 export function AddNoteForm({ entityType, entityId, onNoteAdded }: AddNoteFormProps) {
   const [content, setContent] = useState("");
+  const [observedAt, setObservedAt] = useState(
+    () => new Date().toISOString().slice(0, 10)
+  );
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,10 +43,12 @@ export function AddNoteForm({ entityType, entityId, onNoteAdded }: AddNoteFormPr
         entityType,
         entityId,
         content: content.trim() || undefined,
+        observedAt: observedAt ? new Date(observedAt + "T12:00:00").toISOString() : undefined,
         photoKeys,
       });
 
       setContent("");
+      setObservedAt(new Date().toISOString().slice(0, 10));
       setFiles([]);
       onNoteAdded();
       addToast("Note added");
@@ -63,6 +68,15 @@ export function AddNoteForm({ entityType, entityId, onNoteAdded }: AddNoteFormPr
         rows={3}
         className="w-full border border-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
       />
+      <div className="flex items-center gap-2">
+        <label className="text-xs text-text/50">Observation date</label>
+        <input
+          type="date"
+          value={observedAt}
+          onChange={(e) => setObservedAt(e.target.value)}
+          className="border border-border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+        />
+      </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button

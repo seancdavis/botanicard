@@ -11,6 +11,7 @@ interface Photo {
 interface Note {
   id: number;
   content?: string;
+  observedAt?: string | null;
   createdAt: string;
   photos?: Photo[];
 }
@@ -69,12 +70,10 @@ export function NotesList({ notes, onDelete }: NotesListProps) {
             )}
           </div>
           <p className="text-xs text-text/40 mt-2">
-            {new Date(note.createdAt).toLocaleDateString("en-US", {
+            {new Date(note.observedAt || note.createdAt).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
               year: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
             })}
           </p>
         </div>
