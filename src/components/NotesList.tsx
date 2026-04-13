@@ -40,12 +40,15 @@ export function NotesList({ notes, onDelete }: NotesListProps) {
           className="bg-surface rounded-lg border border-border p-4"
         >
           <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               {note.content && (
                 <p className="text-sm whitespace-pre-wrap">{note.content}</p>
               )}
+              {/* Photos are attached to their parent note via the photos table,
+                  so they render inline here. Each note is a single entry with
+                  both text content and photos displayed together. */}
               {note.photos && note.photos.length > 0 && (
-                <div className="flex gap-2 mt-2 flex-wrap">
+                <div className={`flex gap-2 flex-wrap${note.content ? " mt-2" : ""}`}>
                   {note.photos.map((photo) => (
                     <img
                       key={photo.id}
