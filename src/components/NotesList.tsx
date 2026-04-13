@@ -1,5 +1,7 @@
-import { Notepad } from "@phosphor-icons/react";
+import { useState } from "react";
+import { Notepad, Trash } from "@phosphor-icons/react";
 import { EmptyState } from "./EmptyState";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 interface Photo {
   id: number;
@@ -22,6 +24,7 @@ interface NotesListProps {
 }
 
 export function NotesList({ notes, onDelete }: NotesListProps) {
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   if (notes.length === 0) {
     return (
       <EmptyState
@@ -62,9 +65,10 @@ export function NotesList({ notes, onDelete }: NotesListProps) {
             </div>
             {onDelete && (
               <button
-                onClick={() => onDelete(note.id)}
-                className="text-text/30 hover:text-red-500 text-xs"
+                onClick={() => setDeleteId(note.id)}
+                className="text-text/30 hover:text-red-500 text-xs cursor-pointer flex items-center gap-1"
               >
+                <Trash size={14} weight="light" />
                 Delete
               </button>
             )}
@@ -78,6 +82,18 @@ export function NotesList({ notes, onDelete }: NotesListProps) {
           </p>
         </div>
       ))}
+      {onDelete && (
+        <ConfirmDialog
+          open={deleteId !== null}
+          title="Delete note?"
+          description="This action cannot be undone."
+          onConfirm={() => {
+            if (deleteId !== null) onDelete(deleteId);
+            setDeleteId(null);
+          }}
+          onCancel={() => setDeleteId(null)}
+        />
+      )}
     </div>
   );
 }
