@@ -1,12 +1,11 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { House, Plant, PottedPlant, Leaf, Upload } from "@phosphor-icons/react";
+import { House, Plant, PottedPlant, Leaf } from "@phosphor-icons/react";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: House },
   { to: "/houseplants", label: "Houseplants", icon: Plant },
   { to: "/planters", label: "Planters", icon: PottedPlant },
   { to: "/garden", label: "Garden", icon: Leaf },
-  { to: "/garden/import", label: "Import Log", icon: Upload },
 ];
 
 export function Layout() {
