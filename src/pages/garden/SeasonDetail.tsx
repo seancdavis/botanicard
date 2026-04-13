@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { Leaf, Plus, Upload } from "@phosphor-icons/react";
+import { Leaf, Plus } from "@phosphor-icons/react";
 import { useData } from "../../lib/useData";
 import { Card } from "../../components/Card";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -64,13 +64,6 @@ export function SeasonDetail() {
             >
               <Plus size={16} weight="light" />
               Add Cell Group
-            </Link>
-            <Link
-              to="/garden/import"
-              className="bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90 flex items-center gap-2"
-            >
-              <Upload size={16} weight="light" />
-              Import Log
             </Link>
           </div>
         }
