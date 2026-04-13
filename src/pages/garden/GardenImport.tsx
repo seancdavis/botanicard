@@ -23,7 +23,7 @@ interface ImportUpdate {
 
 interface ProcessResult {
   season: { id: number; name: string };
-  cells: { id: number; cardId: string; plantType: string; status: string }[];
+  groups: { id: number; cardId: string; plantType: string; status: string }[];
   updates: ImportUpdate[];
 }
 
@@ -119,7 +119,7 @@ export function GardenImport() {
     const nameWithoutExt = filename.replace(/\.[^.]+$/, "");
     const cardIdMatch = nameWithoutExt.match(/^(\d{2}-\d{3})/);
     if (!cardIdMatch) return null;
-    return result.cells.find((c) => c.cardId === cardIdMatch[1]) || null;
+    return result.groups.find((g) => g.cardId === cardIdMatch[1]) || null;
   };
 
   const handleConfirm = async () => {
@@ -143,7 +143,7 @@ export function GardenImport() {
 
           try {
             await api.post("/notes", {
-              entityType: "garden_cell",
+              entityType: "garden_cell_group",
               entityId: cell.id,
               content: `Photo: ${photo.filename}`,
               photoKeys: [photo.key],
@@ -202,12 +202,12 @@ export function GardenImport() {
     <Card className="p-5">
       <h3 className="text-lg font-bold mb-2">Photos</h3>
       <p className="text-sm text-text/60 mb-3">
-        Attach photos with filenames matching cell IDs (e.g.,{" "}
+        Attach photos with filenames matching cell group IDs (e.g.,{" "}
         <code className="text-xs bg-canvas px-1 py-0.5 rounded">
           26-001.jpg
         </code>
         ). Each photo uploads immediately and is matched to the corresponding
-        cell.
+        cell group.
       </p>
       <input
         ref={photoInputRef}
@@ -234,7 +234,7 @@ export function GardenImport() {
       {uploadedPhotos.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
           {uploadedPhotos.map((photo, i) => {
-            const matchedCell = result ? getMatchedCell(photo.filename) : null;
+            const matchedGroup = result ? getMatchedCell(photo.filename) : null;
             return (
               <div
                 key={photo.key}
@@ -252,13 +252,13 @@ export function GardenImport() {
                   {result && (
                     <p
                       className={`text-xs mt-0.5 ${
-                        matchedCell
+                        matchedGroup
                           ? "text-primary font-medium"
                           : "text-orange-500"
                       }`}
                     >
-                      {matchedCell
-                        ? `${matchedCell.cardId} - ${matchedCell.plantType}`
+                      {matchedGroup
+                        ? `${matchedGroup.cardId} - ${matchedGroup.plantType}`
                         : "No match"}
                     </p>
                   )}
@@ -382,7 +382,7 @@ export function GardenImport() {
       <div className="max-w-2xl space-y-4">
         <p className="text-sm text-text/60">
           Paste a transcription of your garden notes. AI will parse them into
-          structured updates for your cells.
+          structured updates for your cell groups.
         </p>
 
         <div>
@@ -421,7 +421,7 @@ export function GardenImport() {
             value={transcription}
             onChange={(e) => setTranscription(e.target.value)}
             rows={10}
-            placeholder="Paste your garden notes here... e.g. 'The tomatoes in cell 26-001 are sprouting nicely, about 3 inches tall. The peppers look like they might be dead...'"
+            placeholder="Paste your garden notes here... e.g. 'The tomatoes in 26-001 are sprouting nicely, about 3 inches tall. The peppers look like they might be dead...'"
             className="w-full border border-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>

@@ -24,13 +24,16 @@ interface Note {
   photos?: Photo[];
 }
 
-interface CellDetailData {
+interface CellGroupDetailData {
   id: number;
   cardId: string;
   seasonId: number;
   plantType: string;
   variety?: string;
+  cellCount: number;
   seedCount?: number;
+  desiredYield?: number;
+  actualYield?: number;
   status: string;
   description?: string;
   createdAt: string;
@@ -49,20 +52,20 @@ const statusOrder = [
   "dead",
 ];
 
-export function CellDetail() {
+export function CellGroupDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const { data: cell, loading, refetch } = useData<CellDetailData>(
-    `/garden/cells/${id}`
+  const { data: group, loading, refetch } = useData<CellGroupDetailData>(
+    `/garden/cell-groups/${id}`
   );
 
   const handleDelete = async () => {
-    if (!confirm("Delete this cell?")) return;
+    if (!confirm("Delete this cell group?")) return;
     try {
-      await api.delete(`/garden/cells/${id}`);
-      addToast("Cell deleted");
-      navigate(cell?.seasonId ? `/garden/seasons/${cell.seasonId}` : "/garden");
+      await api.delete(`/garden/cell-groups/${id}`);
+      addToast("Cell group deleted");
+      navigate(group?.seasonId ? `/garden/seasons/${group.seasonId}` : "/garden");
     } catch (err) {
       addToast(err instanceof Error ? err.message : "Failed to delete", "error");
     }
@@ -87,25 +90,25 @@ export function CellDetail() {
     );
   }
 
-  if (!cell) {
-    return <div className="text-text/50">Cell not found.</div>;
+  if (!group) {
+    return <div className="text-text/50">Cell group not found.</div>;
   }
 
-  const currentStatusIndex = statusOrder.indexOf(cell.status);
+  const currentStatusIndex = statusOrder.indexOf(group.status);
 
   return (
     <div>
       <PageHeader
-        title={cell.plantType}
+        title={group.plantType}
         backTo={
-          cell.season
-            ? `/garden/seasons/${cell.seasonId}`
+          group.season
+            ? `/garden/seasons/${group.seasonId}`
             : "/garden"
         }
         actions={
           <div className="flex gap-2">
             <Link
-              to={`/garden/cells/${id}/edit`}
+              to={`/garden/cell-groups/${id}/edit`}
               className="text-text/40 hover:text-text transition-colors"
             >
               <PencilSimple size={20} weight="light" />
@@ -120,10 +123,10 @@ export function CellDetail() {
         }
       />
 
-      {cell.primaryPhoto && (
+      {group.primaryPhoto && (
         <img
-          src={`/api/photos/${cell.primaryPhoto.blobKey}`}
-          alt={cell.plantType}
+          src={`/api/photos/${group.primaryPhoto.blobKey}`}
+          alt={group.plantType}
           className="w-full h-64 object-cover rounded-xl mb-6"
         />
       )}
@@ -132,22 +135,37 @@ export function CellDetail() {
         <div className="lg:col-span-2 space-y-6">
           <Card className="p-5">
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-sm font-mono text-text/40">{cell.cardId}</span>
-              <StatusBadge status={cell.status} />
+              <span className="text-sm font-mono text-text/40">{group.cardId}</span>
+              <StatusBadge status={group.status} />
             </div>
-            {cell.variety && (
+            {group.variety && (
               <p className="text-sm text-text/70 mb-2">
-                Variety: {cell.variety}
+                Variety: {group.variety}
               </p>
             )}
-            {cell.seedCount && (
-              <p className="text-sm text-text/70 mb-2">
-                Seeds: ~{cell.seedCount}
+            <div className="flex flex-wrap gap-x-6 gap-y-1">
+              <p className="text-sm text-text/70">
+                Cells: {group.cellCount}
               </p>
-            )}
-            {cell.description && (
-              <p className="text-sm text-text/70 whitespace-pre-wrap">
-                {cell.description}
+              {group.seedCount && (
+                <p className="text-sm text-text/70">
+                  Seeds: ~{group.seedCount}
+                </p>
+              )}
+              {group.desiredYield && (
+                <p className="text-sm text-text/70">
+                  Desired yield: {group.desiredYield}
+                </p>
+              )}
+              {group.actualYield != null && (
+                <p className="text-sm text-text/70">
+                  Actual yield: {group.actualYield}
+                </p>
+              )}
+            </div>
+            {group.description && (
+              <p className="text-sm text-text/70 whitespace-pre-wrap mt-2">
+                {group.description}
               </p>
             )}
           </Card>
@@ -184,27 +202,27 @@ export function CellDetail() {
           <div>
             <h2 className="text-xl font-bold mb-3">Notes</h2>
             <AddNoteForm
-              entityType="garden_cell"
-              entityId={cell.id}
+              entityType="garden_cell_group"
+              entityId={group.id}
               onNoteAdded={refetch}
             />
             <div className="mt-4">
-              <NotesList notes={cell.notes} onDelete={handleDeleteNote} />
+              <NotesList notes={group.notes} onDelete={handleDeleteNote} />
             </div>
           </div>
         </div>
 
         <div className="space-y-4">
-          {cell.season && (
+          {group.season && (
             <Card className="p-4">
               <h3 className="text-xs font-medium text-text/50 uppercase mb-2">
                 Season
               </h3>
               <Link
-                to={`/garden/seasons/${cell.season.id}`}
+                to={`/garden/seasons/${group.season.id}`}
                 className="text-sm font-medium text-primary hover:underline"
               >
-                {cell.season.name}
+                {group.season.name}
               </Link>
             </Card>
           )}
@@ -214,7 +232,7 @@ export function CellDetail() {
               Added
             </h3>
             <p className="text-sm">
-              {new Date(cell.createdAt).toLocaleDateString("en-US", {
+              {new Date(group.createdAt).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
                 year: "numeric",

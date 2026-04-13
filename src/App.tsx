@@ -13,9 +13,9 @@ import { GardenDashboard } from "./pages/garden/GardenDashboard";
 import { SeasonList } from "./pages/garden/SeasonList";
 import { SeasonNew } from "./pages/garden/SeasonNew";
 import { SeasonDetail } from "./pages/garden/SeasonDetail";
-import { CellNew } from "./pages/garden/CellNew";
-import { CellDetail } from "./pages/garden/CellDetail";
-import { CellEdit } from "./pages/garden/CellEdit";
+import { CellGroupNew } from "./pages/garden/CellGroupNew";
+import { CellGroupDetail } from "./pages/garden/CellGroupDetail";
+import { CellGroupEdit } from "./pages/garden/CellGroupEdit";
 import { GardenImport } from "./pages/garden/GardenImport";
 
 export default function App() {
@@ -38,9 +38,9 @@ export default function App() {
         <Route path="/garden/seasons" element={<SeasonList />} />
         <Route path="/garden/seasons/new" element={<SeasonNew />} />
         <Route path="/garden/seasons/:id" element={<SeasonDetail />} />
-        <Route path="/garden/cells/new" element={<CellNew />} />
-        <Route path="/garden/cells/:id" element={<CellDetail />} />
-        <Route path="/garden/cells/:id/edit" element={<CellEdit />} />
+        <Route path="/garden/cell-groups/new" element={<CellGroupNew />} />
+        <Route path="/garden/cell-groups/:id" element={<CellGroupDetail />} />
+        <Route path="/garden/cell-groups/:id/edit" element={<CellGroupEdit />} />
         <Route path="/garden/import" element={<GardenImport />} />
       </Route>
     </Routes>

@@ -11,7 +11,7 @@ interface Season {
   name: string;
   year: number;
   description?: string;
-  cellCount: number;
+  groupCount: number;
 }
 
 export function SeasonList() {
@@ -72,7 +72,7 @@ export function SeasonList() {
                 {season.name}
               </h3>
               <p className="text-sm text-text/50 mt-1">
-                {season.cellCount} cell{season.cellCount !== 1 ? "s" : ""}
+                {season.groupCount} group{season.groupCount !== 1 ? "s" : ""}
               </p>
               {season.description && (
                 <p className="text-sm text-text/60 mt-2 line-clamp-2">

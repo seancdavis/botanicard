@@ -9,7 +9,7 @@ interface Season {
   id: number;
   name: string;
   year: number;
-  cellCount: number;
+  groupCount: number;
 }
 
 export function GardenDashboard() {

@@ -37,13 +37,16 @@ export const gardenSeasons = pgTable("garden_seasons", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const gardenCells = pgTable("garden_cells", {
+export const gardenCellGroups = pgTable("garden_cell_groups", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   cardId: varchar("card_id", { length: 20 }).notNull().unique(),
   seasonId: integer("season_id").notNull(),
   plantType: varchar("plant_type", { length: 255 }).notNull(),
   variety: varchar("variety", { length: 255 }),
+  cellCount: integer("cell_count").default(1).notNull(),
   seedCount: integer("seed_count"),
+  desiredYield: integer("desired_yield"),
+  actualYield: integer("actual_yield"),
   status: varchar("status", { length: 50 }).default("seeded").notNull(),
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

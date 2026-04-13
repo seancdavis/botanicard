@@ -1,6 +1,6 @@
 import type { Config, Context } from "@netlify/functions";
 import { eq, desc, sql } from "drizzle-orm";
-import { db, gardenSeasons, gardenCells, photos, notes } from "../../db";
+import { db, gardenSeasons, gardenCellGroups, photos, notes } from "../../db";
 
 export default async (req: Request, context: Context) => {
   try {
@@ -20,9 +20,9 @@ export default async (req: Request, context: Context) => {
       seasons.map(async (season) => {
         const [countResult] = await db
           .select({ count: sql<number>`COUNT(*)` })
-          .from(gardenCells)
-          .where(eq(gardenCells.seasonId, season.id));
-        return { ...season, cellCount: Number(countResult?.count || 0) };
+          .from(gardenCellGroups)
+          .where(eq(gardenCellGroups.seasonId, season.id));
+        return { ...season, groupCount: Number(countResult?.count || 0) };
       })
     );
 
@@ -36,30 +36,33 @@ export default async (req: Request, context: Context) => {
       .where(eq(gardenSeasons.id, id));
     if (!season) return Response.json({ error: "Not found" }, { status: 404 });
 
-    const cells = await db
+    const groups = await db
       .select({
-        id: gardenCells.id,
-        cardId: gardenCells.cardId,
-        seasonId: gardenCells.seasonId,
-        plantType: gardenCells.plantType,
-        variety: gardenCells.variety,
-        seedCount: gardenCells.seedCount,
-        status: gardenCells.status,
-        description: gardenCells.description,
-        createdAt: gardenCells.createdAt,
-        updatedAt: gardenCells.updatedAt,
+        id: gardenCellGroups.id,
+        cardId: gardenCellGroups.cardId,
+        seasonId: gardenCellGroups.seasonId,
+        plantType: gardenCellGroups.plantType,
+        variety: gardenCellGroups.variety,
+        cellCount: gardenCellGroups.cellCount,
+        seedCount: gardenCellGroups.seedCount,
+        desiredYield: gardenCellGroups.desiredYield,
+        actualYield: gardenCellGroups.actualYield,
+        status: gardenCellGroups.status,
+        description: gardenCellGroups.description,
+        createdAt: gardenCellGroups.createdAt,
+        updatedAt: gardenCellGroups.updatedAt,
         primaryPhotoBlobKey: sql<string | null>`(
           SELECT p.blob_key FROM photos p
           INNER JOIN notes n ON n.id = p.note_id
-          WHERE n.entity_type = 'garden_cell' AND n.entity_id = "garden_cells"."id"
+          WHERE n.entity_type = 'garden_cell_group' AND n.entity_id = "garden_cell_groups"."id"
           ORDER BY n.created_at DESC LIMIT 1
         )`,
       })
-      .from(gardenCells)
-      .where(eq(gardenCells.seasonId, id))
-      .orderBy(gardenCells.cardId);
+      .from(gardenCellGroups)
+      .where(eq(gardenCellGroups.seasonId, id))
+      .orderBy(gardenCellGroups.cardId);
 
-    return Response.json({ ...season, cells });
+    return Response.json({ ...season, groups });
   }
 
   if (req.method === "POST") {

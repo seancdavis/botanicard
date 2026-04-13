@@ -51,7 +51,7 @@ drizzle/           # Migration files
 - Empty states use the `EmptyState` component (`src/components/EmptyState.tsx`) — never raw divs
 - Status values — houseplants: active, archived, dead, given_away, sold
 - Status values — planters: active, archived, broken, given_away, sold
-- Status values — garden cells: seeded, sprouting, growing, transplanted, producing, harvested, dead
+- Status values — garden cell groups: seeded, sprouting, growing, transplanted, producing, harvested, dead
 
 ## Commands
 
