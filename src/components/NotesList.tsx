@@ -307,9 +307,10 @@ export function NotesList({ notes, onDelete, onNoteUpdated }: NotesListProps) {
                     {onNoteUpdated && (
                       <button
                         onClick={() => startEditing(note)}
-                        className="text-text/30 hover:text-primary text-xs cursor-pointer"
+                        className="text-text/30 hover:text-primary text-xs cursor-pointer flex items-center gap-1"
                       >
                         <PencilSimple size={14} weight="light" />
+                        Edit
                       </button>
                     )}
                     {onDelete && (
