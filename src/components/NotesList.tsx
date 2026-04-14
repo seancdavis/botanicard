@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
-import { Notepad, PencilSimple, Camera, X } from "@phosphor-icons/react";
+import { Notepad, PencilSimple, Trash, Camera, X } from "@phosphor-icons/react";
 import { EmptyState } from "./EmptyState";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { api } from "../lib/api";
 import { useToast } from "../contexts/ToastContext";
 
@@ -36,6 +37,7 @@ export function NotesList({ notes, onDelete, onNoteUpdated }: NotesListProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToast } = useToast();
 
@@ -312,9 +314,10 @@ export function NotesList({ notes, onDelete, onNoteUpdated }: NotesListProps) {
                     )}
                     {onDelete && (
                       <button
-                        onClick={() => onDelete(note.id)}
-                        className="text-text/30 hover:text-red-500 text-xs cursor-pointer"
+                        onClick={() => setDeleteId(note.id)}
+                        className="text-text/30 hover:text-red-500 text-xs cursor-pointer flex items-center gap-1"
                       >
+                        <Trash size={14} weight="light" />
                         Delete
                       </button>
                     )}
@@ -334,6 +337,18 @@ export function NotesList({ notes, onDelete, onNoteUpdated }: NotesListProps) {
           </div>
         );
       })}
+      {onDelete && (
+        <ConfirmDialog
+          open={deleteId !== null}
+          title="Delete note?"
+          description="This action cannot be undone."
+          onConfirm={() => {
+            if (deleteId !== null) onDelete(deleteId);
+            setDeleteId(null);
+          }}
+          onCancel={() => setDeleteId(null)}
+        />
+      )}
     </div>
   );
 }

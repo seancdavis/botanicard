@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Plant, PottedPlant, Leaf, Upload } from "@phosphor-icons/react";
+import { Plant, PottedPlant, Leaf } from "@phosphor-icons/react";
 import { useData } from "../lib/useData";
 import { Card } from "../components/Card";
 import { CardGridSkeleton } from "../components/Skeleton";
@@ -123,13 +123,6 @@ export function Dashboard() {
             >
               <PottedPlant size={16} weight="light" />
               Add Planter
-            </Link>
-            <Link
-              to="/garden/import"
-              className="bg-primary text-white rounded-md px-4 py-2 text-sm font-medium hover:opacity-90 flex items-center gap-2"
-            >
-              <Upload size={16} weight="light" />
-              Garden Import Log
             </Link>
           </div>
         </>
