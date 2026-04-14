@@ -133,7 +133,7 @@ export function PlanterDetail() {
               onNoteAdded={refetch}
             />
             <div className="mt-4">
-              <NotesList notes={planter.notes} onDelete={handleDeleteNote} />
+              <NotesList notes={planter.notes} onDelete={handleDeleteNote} onNoteUpdated={refetch} />
             </div>
           </div>
         </div>
