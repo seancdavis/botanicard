@@ -41,7 +41,7 @@ export function ConfirmDialog({
   return (
     <dialog
       ref={dialogRef}
-      className="backdrop:bg-black/40 bg-surface rounded-xl border border-border shadow-lg p-0 max-w-sm w-full"
+      className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 m-0 backdrop:bg-black/40 bg-surface rounded-xl border border-border shadow-lg p-0 max-w-sm w-full"
     >
       <div className="p-6 text-center">
         <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
