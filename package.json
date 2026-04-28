@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
+    "@netlify/database": "^0.7.0",
     "@netlify/neon": "^0.1.2",
     "@phosphor-icons/react": "^2.1.7",
     "drizzle-orm": "^0.45.1",
