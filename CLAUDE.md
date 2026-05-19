@@ -89,6 +89,26 @@ A remote MCP server lives at `/api/mcp`, implemented in `netlify/functions/mcp.t
 - **Tool scope:** read + create/update on houseplants, planters, garden cell groups, plus note creation/update and photo upload/retrieval. Deliberately **no delete tools** — destructive operations remain UI-only.
 - **Audit logging:** every `tools/call` logs `[MCP] <toolName> <args>` and `[MCP] <toolName> ok|error: ...` via `console.info`. Visible in Netlify Function logs.
 - **Adding a tool:** define it in `netlify/lib/mcp/tools.ts` with a JSON-Schema `inputSchema` and a handler that calls a service function. The handler may return plain data (wrapped as text content) or an explicit `{ content: [...] }` shape (used by `get_photo` to return image content).
+- **Connecting a client:** Claude.ai's web Connectors UI requires OAuth 2.1 + PKCE and does not accept bearer tokens, so this server cannot be installed there. From Claude Desktop or Claude Code, connect via `~/Library/Application Support/Claude/claude_desktop_config.json` using the `mcp-remote` bridge. Add `mcpServers` as a **sibling of `preferences`** at the root (NOT nested inside `preferences` — Claude Desktop auto-populates that key for app state):
+  ```json
+  {
+    "preferences": { ... existing Claude Desktop state ... },
+    "mcpServers": {
+      "botanicard": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-remote",
+          "https://<your-site>.netlify.app/api/mcp",
+          "--header",
+          "Authorization: Bearer ${BOTANICARD_MCP_TOKEN}"
+        ],
+        "env": { "BOTANICARD_MCP_TOKEN": "<token>" }
+      }
+    }
+  }
+  ```
+  Cmd+Q Claude Desktop fully and reopen. Tools appear in the connectors picker. Bridge stderr lives at `~/Library/Logs/Claude/mcp-server-botanicard.log` when debugging.
 
 ## Key Conventions
 
