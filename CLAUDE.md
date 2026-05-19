@@ -43,10 +43,25 @@ src/
   lib/             # Utilities (api client, hooks)
   contexts/        # React contexts (auth, toast)
 netlify/
-  functions/       # API endpoints (Netlify Functions)
-  lib/             # Shared server-side helpers (auth, etc.)
+  functions/       # API endpoints (thin routers; one file per resource)
+  lib/             # Shared server-side helpers
+    auth.ts        # requireAuth wrapper
+    errors.ts      # ServiceError + errorResponse helper
+    services/      # Business logic, one file per domain
+  tests/           # Function tests (separate from functions/ — see Testing)
 drizzle/           # Migration files
 ```
+
+## Services Layer
+
+Business logic lives in `netlify/lib/services/<domain>.ts`. Netlify Functions are thin routers that parse the request, call a service function, and translate the result (or thrown error) into a `Response`.
+
+- Services return plain data (arrays, objects) — no `Response` objects, no HTTP concerns.
+- Services throw `NotFoundError` (404), `ValidationError` (400), or a custom `ServiceError(message, status)` for any expected failure.
+- Function handlers wrap the body in `try { ... } catch (err) { return errorResponse(err, "Scope name"); }`. The helper maps `ServiceError` instances to JSON responses with the right status; unexpected errors are logged with `console.error` and returned as 500.
+- The MCP server (planned) will import the same service functions directly — never via HTTP.
+
+When adding a new domain: create `netlify/lib/services/<domain>.ts` first, write the service functions, then wire up a thin Netlify Function that calls them.
 
 ## Auth
 
@@ -64,9 +79,11 @@ drizzle/           # Migration files
 ## Key Conventions
 
 - All API endpoints use modern Netlify Functions: `export default requireAuth(async (req: Request, context: Context) => { ... })` + `export const config: Config = { path: "..." }`
-- Import `Config` and `Context` types from `@netlify/functions`; import `requireAuth` from `../lib/auth`
-- API functions must wrap the handler body in a try-catch that logs with `console.error` and returns a JSON error response with status 500
-- Database accessed via singleton: `import { db, tableName } from "../../db"`
+- Function handlers are thin routers — parse path/method, call service functions, return `Response.json(result)`. Do NOT put DB queries or business logic in handlers.
+- Import `Config` and `Context` types from `@netlify/functions`; import `requireAuth` from `../lib/auth`; import `errorResponse` from `../lib/errors`
+- Wrap the handler body in `try { ... } catch (err) { return errorResponse(err, "<Scope>"); }`
+- Services accessed via `import { ... } from "../lib/services/<domain>"`
+- Database accessed from services via singleton: `import { db, tableName } from "../../../db"`
 - Use `Response.json()` for all JSON responses (not `new Response(JSON.stringify(...))`)
 - In Drizzle `sql` template literals, `${table.column}` renders as just `"column"` without table qualification — use raw SQL table-qualified references (e.g. `"houseplants"."id"`) inside correlated subqueries to avoid ambiguous column errors
 - Drizzle migrations use `prefix: 'timestamp'`
