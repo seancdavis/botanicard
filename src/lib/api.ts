@@ -9,6 +9,14 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     },
   });
 
+  if (res.status === 401) {
+    const returnTo = encodeURIComponent(
+      window.location.pathname + window.location.search,
+    );
+    window.location.assign(`/login?returnTo=${returnTo}`);
+    throw new Error("Unauthorized");
+  }
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: "Request failed" }));
     throw new Error(body.error || `Request failed with status ${res.status}`);

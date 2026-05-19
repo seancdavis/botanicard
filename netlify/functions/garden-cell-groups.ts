@@ -1,6 +1,7 @@
 import type { Config, Context } from "@netlify/functions";
 import { eq, desc, sql } from "drizzle-orm";
 import { db, gardenCellGroups, gardenSeasons, notes, photos } from "../../db";
+import { requireAuth } from "../lib/auth";
 
 async function generateCardId(seasonId: number): Promise<string> {
   // Get the season year
@@ -24,7 +25,7 @@ async function generateCardId(seasonId: number): Promise<string> {
   return `${yearPrefix}-${String(next).padStart(3, "0")}`;
 }
 
-export default async (req: Request, context: Context) => {
+export default requireAuth(async (req: Request, context: Context) => {
   try {
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
@@ -178,7 +179,7 @@ export default async (req: Request, context: Context) => {
       { status: 500 }
     );
   }
-};
+});
 
 export const config: Config = {
   path: ["/api/garden/cell-groups", "/api/garden/cell-groups/*"],

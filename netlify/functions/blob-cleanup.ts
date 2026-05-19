@@ -1,8 +1,9 @@
 import type { Config, Context } from "@netlify/functions";
 import { getStore } from "@netlify/blobs";
 import { db, photos, planters } from "../../db";
+import { requireAuth } from "../lib/auth";
 
-export default async (req: Request, _context: Context) => {
+export default requireAuth(async (req: Request, _context: Context) => {
   try {
     // GET — list orphan blobs
     if (req.method === "GET") {
@@ -62,7 +63,7 @@ export default async (req: Request, _context: Context) => {
     console.error("blob-cleanup error:", err);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
-};
+});
 
 export const config: Config = {
   path: ["/api/admin/blob-cleanup"],

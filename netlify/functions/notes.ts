@@ -1,8 +1,9 @@
 import type { Config, Context } from "@netlify/functions";
 import { eq } from "drizzle-orm";
 import { db, notes, photos } from "../../db";
+import { requireAuth } from "../lib/auth";
 
-export default async (req: Request, context: Context) => {
+export default requireAuth(async (req: Request, context: Context) => {
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
   const id = pathParts.length > 2 ? parseInt(pathParts[2], 10) : null;
@@ -91,7 +92,7 @@ export default async (req: Request, context: Context) => {
   }
 
   return Response.json({ error: "Method not allowed" }, { status: 405 });
-};
+});
 
 export const config: Config = {
   path: ["/api/notes", "/api/notes/*"],

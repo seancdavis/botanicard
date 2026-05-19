@@ -1,6 +1,7 @@
 import type { Config, Context } from "@netlify/functions";
 import { eq, desc, sql } from "drizzle-orm";
 import { db, houseplants, planters, notes, photos } from "../../db";
+import { requireAuth } from "../lib/auth";
 
 async function generateCardId(): Promise<string> {
   const [result] = await db
@@ -10,7 +11,7 @@ async function generateCardId(): Promise<string> {
   return String(next).padStart(4, "0");
 }
 
-export default async (req: Request, context: Context) => {
+export default requireAuth(async (req: Request, context: Context) => {
   try {
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
@@ -165,7 +166,7 @@ export default async (req: Request, context: Context) => {
       { status: 500 }
     );
   }
-};
+});
 
 export const config: Config = {
   path: ["/api/houseplants", "/api/houseplants/*"],

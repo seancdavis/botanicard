@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { HouseplantList } from "./pages/houseplants/HouseplantList";
 import { HouseplantNew } from "./pages/houseplants/HouseplantNew";
@@ -21,6 +22,7 @@ import { BlobCleanup } from "./pages/admin/BlobCleanup";
 export default function App() {
   return (
     <Routes>
+      <Route path="/login" element={<Login />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
 

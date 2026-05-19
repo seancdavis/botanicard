@@ -1,5 +1,6 @@
 {
   "enabledPlugins": {
-    "seancdavis-skills@seancdavis-skills-marketplace": true
+    "seancdavis-skills@seancdavis-skills-marketplace": true,
+    "netlify-skills@netlify-context-and-tools": true
   }
 }
