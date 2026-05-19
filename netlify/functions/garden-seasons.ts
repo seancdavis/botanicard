@@ -1,8 +1,9 @@
 import type { Config, Context } from "@netlify/functions";
 import { eq, desc, sql } from "drizzle-orm";
 import { db, gardenSeasons, gardenCellGroups, photos, notes } from "../../db";
+import { requireAuth } from "../lib/auth";
 
-export default async (req: Request, context: Context) => {
+export default requireAuth(async (req: Request, context: Context) => {
   try {
   const url = new URL(req.url);
   const pathParts = url.pathname.split("/").filter(Boolean);
@@ -126,7 +127,7 @@ export default async (req: Request, context: Context) => {
       { status: 500 }
     );
   }
-};
+});
 
 export const config: Config = {
   path: ["/api/garden/seasons", "/api/garden/seasons/*"],
