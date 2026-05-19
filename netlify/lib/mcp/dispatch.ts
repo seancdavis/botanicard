@@ -42,6 +42,22 @@ function toolError(text: string): ToolResult {
   return { content: [{ type: "text", text }], isError: true };
 }
 
+const MAX_LOGGED_STRING = 500;
+
+export function summarizeArgs(
+  args: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(args)) {
+    if (typeof v === "string" && v.length > MAX_LOGGED_STRING) {
+      out[k] = `${v.slice(0, 60)}...<${v.length} chars>`;
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 async function callTool(params: unknown): Promise<ToolResult> {
   if (!params || typeof params !== "object") {
     return toolError("Error: Invalid tool call params");
@@ -63,7 +79,7 @@ async function callTool(params: unknown): Promise<ToolResult> {
       ? (args as Record<string, unknown>)
       : {};
 
-  console.info("[MCP]", name, JSON.stringify(callArgs));
+  console.info("[MCP]", name, JSON.stringify(summarizeArgs(callArgs)));
   try {
     const result = await tool.handler(callArgs);
     console.info("[MCP]", name, "ok");

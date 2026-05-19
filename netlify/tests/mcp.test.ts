@@ -31,6 +31,7 @@ import { listHouseplants, createHouseplant } from "../lib/services/houseplants";
 import { createNote } from "../lib/services/notes";
 import { getPhoto, uploadPhotoBytes } from "../lib/services/photos";
 import { ValidationError } from "../lib/errors";
+import { summarizeArgs } from "../lib/mcp/dispatch";
 import mcpHandler from "../functions/mcp";
 
 const TOKEN = "test-bearer-token-xyz";
@@ -319,5 +320,56 @@ describe("MCP tools/call", () => {
     expect(typeof body.result.content[0].data).toBe("string");
     const decoded = Buffer.from(body.result.content[0].data, "base64");
     expect(Array.from(decoded)).toEqual([1, 2, 3, 4]);
+  });
+});
+
+describe("MCP audit log arg summarization", () => {
+  it("leaves short string args untouched", () => {
+    expect(summarizeArgs({ name: "basil", id: 1 })).toEqual({
+      name: "basil",
+      id: 1,
+    });
+  });
+
+  it("replaces long string args with a length marker", () => {
+    const long = "x".repeat(10000);
+    const result = summarizeArgs({ data: long, filename: "img.png" });
+    expect(result.filename).toBe("img.png");
+    expect(typeof result.data).toBe("string");
+    expect((result.data as string).length).toBeLessThan(100);
+    expect(result.data).toContain("<10000 chars>");
+  });
+
+  it("does not include the long base64 payload in upload_photo logs", async () => {
+    vi.mocked(uploadPhotoBytes).mockResolvedValue("test-key");
+    const longData = "A".repeat(10000);
+    const consoleSpy = vi
+      .spyOn(console, "info")
+      .mockImplementation(() => undefined);
+
+    await mcpHandler(
+      authedRequest({
+        jsonrpc: "2.0",
+        id: 100,
+        method: "tools/call",
+        params: {
+          name: "upload_photo",
+          arguments: {
+            data: longData,
+            filename: "x.png",
+            mimeType: "image/png",
+          },
+        },
+      }),
+      {} as never,
+    );
+
+    const allLogged = consoleSpy.mock.calls
+      .map((c) => c.map(String).join(" "))
+      .join("\n");
+
+    expect(allLogged).not.toContain(longData);
+    expect(allLogged).toContain("<10000 chars>");
+    consoleSpy.mockRestore();
   });
 });
