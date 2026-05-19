@@ -1,19 +1,23 @@
 import { getStore } from "@netlify/blobs";
 import { ValidationError } from "../errors";
 
+export async function uploadPhotoBytes(
+  bytes: Uint8Array,
+  filename: string,
+  mimeType: string,
+): Promise<string> {
+  const store = getStore("photos");
+  const key = `${crypto.randomUUID()}-${filename}`;
+  await store.set(key, bytes, { metadata: { contentType: mimeType } });
+  return key;
+}
+
 export async function uploadPhoto(file: File | null): Promise<string> {
   if (!file) {
     throw new ValidationError("No file provided");
   }
-
-  const store = getStore("photos");
-  const key = `${crypto.randomUUID()}-${file.name}`;
-  const buffer = await file.arrayBuffer();
-  await store.set(key, new Uint8Array(buffer), {
-    metadata: { contentType: file.type },
-  });
-
-  return key;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  return uploadPhotoBytes(bytes, file.name, file.type);
 }
 
 export async function getPhoto(

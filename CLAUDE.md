@@ -45,11 +45,15 @@ src/
 netlify/
   functions/       # API endpoints (thin routers; one file per resource)
   lib/             # Shared server-side helpers
-    auth.ts        # requireAuth wrapper
+    auth.ts        # requireAuth wrapper (Identity-based)
     errors.ts      # ServiceError + errorResponse helper
     services/      # Business logic, one file per domain
-  tests/           # Function tests (separate from functions/ — see Testing)
+    mcp/           # MCP server protocol, tools, bearer auth, dispatcher
+  tests/           # Server-side tests (separate from functions/ — see Testing)
 drizzle/           # Migration files
+.github/
+  workflows/
+    ci.yml         # GitHub Actions — runs tests + build on every PR
 ```
 
 ## Services Layer
@@ -59,7 +63,7 @@ Business logic lives in `netlify/lib/services/<domain>.ts`. Netlify Functions ar
 - Services return plain data (arrays, objects) — no `Response` objects, no HTTP concerns.
 - Services throw `NotFoundError` (404), `ValidationError` (400), or a custom `ServiceError(message, status)` for any expected failure.
 - Function handlers wrap the body in `try { ... } catch (err) { return errorResponse(err, "Scope name"); }`. The helper maps `ServiceError` instances to JSON responses with the right status; unexpected errors are logged with `console.error` and returned as 500.
-- The MCP server (planned) will import the same service functions directly — never via HTTP.
+- The MCP server (`netlify/lib/mcp/`) imports the same service functions directly — never via HTTP.
 
 When adding a new domain: create `netlify/lib/services/<domain>.ts` first, write the service functions, then wire up a thin Netlify Function that calls them.
 
@@ -75,6 +79,16 @@ When adding a new domain: create `netlify/lib/services/<domain>.ts` first, write
 - UI routes are gated by `src/components/Layout.tsx` — unauthenticated visitors are redirected to `/login` with a `returnTo` query param.
 - The API client (`src/lib/api.ts`) handles `401` by redirecting to `/login` (covers expired-session cases mid-session).
 - Identity does **not** work with `netlify dev`. Auth changes must be tested on deploy previews using production Identity.
+
+## MCP Server
+
+A remote MCP server lives at `/api/mcp`, implemented in `netlify/functions/mcp.ts` with logic in `netlify/lib/mcp/`. AI agents (Claude.ai, Claude Code, etc.) connect with bearer auth and call tools that read or write through the existing service layer.
+
+- **Auth:** bearer token via `MCP_BEARER_TOKEN` env var. NOT wrapped with `requireAuth` (that uses Identity cookies; agents have neither). If the env var is missing, every request is rejected.
+- **Protocol:** JSON-RPC 2.0 over HTTP POST. Stateless — each request is independent. Supports `initialize`, `tools/list`, `tools/call`, and `ping`.
+- **Tool scope:** read + create/update on houseplants, planters, garden cell groups, plus note creation/update and photo upload/retrieval. Deliberately **no delete tools** — destructive operations remain UI-only.
+- **Audit logging:** every `tools/call` logs `[MCP] <toolName> <args>` and `[MCP] <toolName> ok|error: ...` via `console.info`. Visible in Netlify Function logs.
+- **Adding a tool:** define it in `netlify/lib/mcp/tools.ts` with a JSON-Schema `inputSchema` and a handler that calls a service function. The handler may return plain data (wrapped as text content) or an explicit `{ content: [...] }` shape (used by `get_photo` to return image content).
 
 ## Key Conventions
 
@@ -103,8 +117,9 @@ When adding a new domain: create `netlify/lib/services/<domain>.ts` first, write
 
 - Vitest is the test runner. Tests live next to source as `*.test.ts(x)`.
 - **Exception:** tests for Netlify Functions go in `netlify/tests/`, not `netlify/functions/`. Netlify treats every top-level file in `netlify/functions/` as a deployable function and rejects names containing `.` (so `*.test.ts` adjacent to functions breaks the deploy).
-- Server-side tests mock `@netlify/identity`'s `getUser` to control auth state.
+- Server-side tests mock `@netlify/identity`'s `getUser` (auth) or the service modules (MCP) to control behavior without hitting the DB.
 - The test config sets a fake `NETLIFY_DB_URL` so Drizzle's module-level init succeeds; tests must not actually query the database.
+- CI runs `npm test` and `npm run build` on every PR via `.github/workflows/ci.yml`.
 
 ## Commands
 
