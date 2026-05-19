@@ -5,13 +5,13 @@ vi.mock("@netlify/identity", () => ({
 }));
 
 import { getUser } from "@netlify/identity";
-import houseplants from "./houseplants";
-import planters from "./planters";
-import notes from "./notes";
-import photos from "./photos";
-import gardenSeasons from "./garden-seasons";
-import gardenCellGroups from "./garden-cell-groups";
-import blobCleanup from "./blob-cleanup";
+import houseplants from "../functions/houseplants";
+import planters from "../functions/planters";
+import notes from "../functions/notes";
+import photos from "../functions/photos";
+import gardenSeasons from "../functions/garden-seasons";
+import gardenCellGroups from "../functions/garden-cell-groups";
+import blobCleanup from "../functions/blob-cleanup";
 
 const mockGetUser = vi.mocked(getUser);
 

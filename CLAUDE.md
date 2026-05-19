@@ -85,6 +85,7 @@ drizzle/           # Migration files
 ## Testing
 
 - Vitest is the test runner. Tests live next to source as `*.test.ts(x)`.
+- **Exception:** tests for Netlify Functions go in `netlify/tests/`, not `netlify/functions/`. Netlify treats every top-level file in `netlify/functions/` as a deployable function and rejects names containing `.` (so `*.test.ts` adjacent to functions breaks the deploy).
 - Server-side tests mock `@netlify/identity`'s `getUser` to control auth state.
 - The test config sets a fake `NETLIFY_DB_URL` so Drizzle's module-level init succeeds; tests must not actually query the database.
 
