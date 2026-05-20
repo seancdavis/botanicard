@@ -378,7 +378,7 @@ export const tools: ToolDefinition[] = [
   {
     name: "upload_photo",
     description:
-      "Upload an image. Returns a blobKey you can pass to create_note (photoKeys) or to a planter's photoBlobKey field. The data argument must be base64-encoded image bytes.",
+      "Upload a small image inline as base64. Returns a blobKey you can pass to create_note (photoKeys) or to a planter's photoBlobKey field. PREFER the HTTP endpoint for any local file or image larger than ~100KB: `POST /api/mcp/upload?filename=<name>` with `Authorization: Bearer <token>`, `Content-Type: image/<type>`, and raw bytes as the body (e.g. `curl --data-binary @photo.jpg`). The endpoint returns `{ key }` in the same format as this tool. Use this tool only when the agent cannot make outbound HTTP requests.",
     inputSchema: {
       type: "object",
       properties: {
