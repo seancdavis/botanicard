@@ -18,7 +18,8 @@ import {
   updateCellGroup,
 } from "../services/garden-cell-groups";
 import { createNote, updateNote } from "../services/notes";
-import { getPhoto, uploadPhotoBytes } from "../services/photos";
+import { getPhoto } from "../services/photos";
+import { finalizeUpload, prepareUpload } from "../services/uploads";
 
 export interface ToolDefinition {
   name: string;
@@ -313,7 +314,7 @@ export const tools: ToolDefinition[] = [
   {
     name: "create_note",
     description:
-      "Attach a note to a houseplant, planter, or garden_cell_group. Provide entityType + entityId. Optionally attach previously-uploaded photos via photoKeys (use upload_photo first to obtain a key).",
+      "Attach a note to a houseplant, planter, or garden_cell_group. Provide entityType + entityId. Optionally attach previously-uploaded files via photoKeys — use prepare_upload + PUT + finalize_upload to obtain a key.",
     inputSchema: {
       type: "object",
       properties: {
@@ -330,7 +331,8 @@ export const tools: ToolDefinition[] = [
         photoKeys: {
           type: "array",
           items: { type: "string" },
-          description: "Blob keys from upload_photo to attach to this note.",
+          description:
+            "Blob keys from finalize_upload to attach to this note.",
         },
       },
       required: ["entityType", "entityId"],
@@ -374,35 +376,57 @@ export const tools: ToolDefinition[] = [
       }),
   },
 
-  // ── Photos ─────────────────────────────────────────────────────────────
+  // ── Uploads (presigned-URL flow) ───────────────────────────────────────
   {
-    name: "upload_photo",
+    name: "prepare_upload",
     description:
-      "Upload a small image inline as base64. Returns a blobKey you can pass to create_note (photoKeys) or to a planter's photoBlobKey field. PREFER the HTTP endpoint for any local file or image larger than ~100KB: `POST /api/mcp/upload?filename=<name>` with `Authorization: Bearer <token>`, `Content-Type: image/<type>`, and raw bytes as the body (e.g. `curl --data-binary @photo.jpg`). The endpoint returns `{ key }` in the same format as this tool. Use this tool only when the agent cannot make outbound HTTP requests.",
+      "Prepare a presigned upload. Returns a short-lived signed URL the agent can PUT raw file bytes to (no Authorization header needed on the PUT), plus an opaque uploadHandle. After the PUT succeeds, call finalize_upload with the handle to get back a stable blob key for use in create_note (photoKeys) or a planter's photoBlobKey. The URL expires in 5 minutes and is single-use.",
     inputSchema: {
       type: "object",
       properties: {
-        data: {
+        filename: {
           type: "string",
-          description: "Base64-encoded image bytes (no data: prefix).",
+          description: "Original filename (used for metadata, not the key).",
         },
-        filename: { type: "string" },
-        mimeType: {
+        contentType: {
           type: "string",
-          description: "e.g. image/jpeg, image/png, image/webp",
+          description:
+            "MIME type the agent will send in Content-Type on the PUT (e.g. image/jpeg, application/pdf).",
+        },
+        size: {
+          type: "number",
+          description:
+            "Declared upper-bound byte count. The PUT will be rejected if the body exceeds this value.",
         },
       },
-      required: ["data", "filename", "mimeType"],
+      required: ["filename", "contentType", "size"],
     },
-    handler: async (args) => {
-      const data = requireString(args, "data");
-      const filename = requireString(args, "filename");
-      const mimeType = requireString(args, "mimeType");
-      const bytes = Uint8Array.from(Buffer.from(data, "base64"));
-      const key = await uploadPhotoBytes(bytes, filename, mimeType);
-      return { key };
-    },
+    handler: async (args) =>
+      prepareUpload({
+        filename: requireString(args, "filename"),
+        contentType: requireString(args, "contentType"),
+        size: requireNumber(args, "size"),
+      }),
   },
+  {
+    name: "finalize_upload",
+    description:
+      "Finalize a presigned upload after the agent has PUT raw bytes to the uploadUrl returned by prepare_upload. Verifies the blob exists and returns a stable { key } the agent can pass to create_note (photoKeys) or to a planter's photoBlobKey.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        uploadHandle: {
+          type: "string",
+          description: "The uploadHandle returned by prepare_upload.",
+        },
+      },
+      required: ["uploadHandle"],
+    },
+    handler: async (args) =>
+      finalizeUpload(requireString(args, "uploadHandle")),
+  },
+
+  // ── Photos ─────────────────────────────────────────────────────────────
   {
     name: "get_photo",
     description:

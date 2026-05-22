@@ -1,145 +1,271 @@
+/**
+ * Tests for the PUT /api/mcp/upload/blob/:token handler.
+ *
+ * Both dependencies are mocked so the tests run without a DB or blob store.
+ *  - verifyUploadToken: controls token-verification outcomes
+ *  - writeStagedUpload: controls the storage write outcome
+ */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../lib/services/photos", () => ({
-  uploadPhotoBytes: vi.fn(),
+vi.mock("../lib/mcp/upload-tokens", () => ({
+  verifyUploadToken: vi.fn(),
+}));
+vi.mock("../lib/services/uploads", () => ({
+  writeStagedUpload: vi.fn(),
 }));
 
-import { uploadPhotoBytes } from "../lib/services/photos";
+import { verifyUploadToken } from "../lib/mcp/upload-tokens";
+import { writeStagedUpload } from "../lib/services/uploads";
+import { ServiceError } from "../lib/errors";
 import uploadHandler from "../functions/mcp-upload";
 
-const TOKEN = "test-bearer-token-xyz";
+const VALID_PAYLOAD = {
+  uploadId: "test-uuid-1234",
+  filename: "photo.jpg",
+  contentType: "image/jpeg",
+  size: 1024,
+  exp: Math.floor(Date.now() / 1000) + 300,
+};
 
-function uploadRequest(
+function makeContext(token = "valid-token") {
+  return { params: { token } } as never;
+}
+
+function putRequest(
+  token: string,
   body: BodyInit | null,
-  init: RequestInit = {},
-  query = "",
+  contentType = "image/jpeg",
 ): Request {
-  const { headers: initHeaders, ...rest } = init;
-  return new Request(`http://localhost/api/mcp/upload${query}`, {
-    method: "POST",
-    body,
-    ...rest,
-    headers: {
-      "Content-Type": "image/jpeg",
-      Authorization: `Bearer ${TOKEN}`,
-      ...(initHeaders as Record<string, string> | undefined),
+  return new Request(
+    `http://localhost/api/mcp/upload/blob/${token}`,
+    {
+      method: "PUT",
+      body,
+      headers: { "Content-Type": contentType },
     },
-  });
+  );
 }
 
 beforeEach(() => {
-  process.env.MCP_BEARER_TOKEN = TOKEN;
   vi.clearAllMocks();
 });
 
 afterEach(() => {
-  delete process.env.MCP_BEARER_TOKEN;
+  vi.clearAllMocks();
 });
 
-describe("/api/mcp/upload bearer auth", () => {
-  it("rejects when Authorization is missing", async () => {
-    const res = await uploadHandler(
-      new Request("http://localhost/api/mcp/upload", { method: "POST" }),
-      {} as never,
-    );
-    expect(res.status).toBe(401);
-  });
+// ---------------------------------------------------------------------------
+// Method check
+// ---------------------------------------------------------------------------
 
-  it("rejects when token is wrong", async () => {
+describe("PUT /api/mcp/upload/blob/:token — method", () => {
+  it("returns 405 for non-PUT methods", async () => {
     const res = await uploadHandler(
-      uploadRequest(new Uint8Array([1, 2, 3]), {
-        headers: { Authorization: "Bearer wrong" },
+      new Request("http://localhost/api/mcp/upload/blob/tok", {
+        method: "POST",
       }),
-      {} as never,
-    );
-    expect(res.status).toBe(401);
-  });
-
-  it("rejects when MCP_BEARER_TOKEN env is not set", async () => {
-    delete process.env.MCP_BEARER_TOKEN;
-    const res = await uploadHandler(
-      uploadRequest(new Uint8Array([1, 2, 3])),
-      {} as never,
-    );
-    expect(res.status).toBe(401);
-  });
-});
-
-describe("/api/mcp/upload HTTP shape", () => {
-  it("returns 405 for non-POST methods", async () => {
-    const res = await uploadHandler(
-      new Request("http://localhost/api/mcp/upload", {
-        method: "GET",
-        headers: { Authorization: `Bearer ${TOKEN}` },
-      }),
-      {} as never,
+      makeContext("tok"),
     );
     expect(res.status).toBe(405);
   });
+});
 
-  it("rejects non-image content types", async () => {
+// ---------------------------------------------------------------------------
+// Token verification
+// ---------------------------------------------------------------------------
+
+describe("PUT /api/mcp/upload/blob/:token — token checks", () => {
+  it("returns 401 when token signature is invalid", async () => {
+    vi.mocked(verifyUploadToken).mockReturnValue({
+      ok: false,
+      reason: "invalid_signature",
+    });
+
     const res = await uploadHandler(
-      uploadRequest("hello", { headers: { "Content-Type": "text/plain" } }),
-      {} as never,
+      putRequest("bad-token", new Uint8Array([1, 2, 3])),
+      makeContext("bad-token"),
     );
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error).toMatch(/image/);
+    expect(body.error).toBe("invalid_signature");
   });
 
-  it("rejects empty bodies", async () => {
+  it("returns 410 when token is expired", async () => {
+    vi.mocked(verifyUploadToken).mockReturnValue({
+      ok: false,
+      reason: "expired",
+    });
+
     const res = await uploadHandler(
-      uploadRequest(new Uint8Array()),
-      {} as never,
+      putRequest("expired-token", new Uint8Array([1, 2, 3])),
+      makeContext("expired-token"),
     );
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(410);
+    const body = await res.json();
+    expect(body.error).toBe("expired");
+  });
+
+  it("returns 401 for a malformed token", async () => {
+    vi.mocked(verifyUploadToken).mockReturnValue({
+      ok: false,
+      reason: "malformed",
+    });
+
+    const res = await uploadHandler(
+      putRequest("malformed", new Uint8Array([1])),
+      makeContext("malformed"),
+    );
+    expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body.error).toBe("malformed");
   });
 });
 
-describe("/api/mcp/upload handler", () => {
-  it("forwards raw bytes, mimeType, and filename to the service", async () => {
-    vi.mocked(uploadPhotoBytes).mockResolvedValue("returned-key");
-    const bytes = new Uint8Array([10, 20, 30, 40]);
+// ---------------------------------------------------------------------------
+// Content-type enforcement
+// ---------------------------------------------------------------------------
 
+describe("PUT /api/mcp/upload/blob/:token — content-type", () => {
+  beforeEach(() => {
+    vi.mocked(verifyUploadToken).mockReturnValue({
+      ok: true,
+      payload: VALID_PAYLOAD,
+    });
+  });
+
+  it("returns 400 when content-type does not match the declared type", async () => {
     const res = await uploadHandler(
-      uploadRequest(
-        bytes,
-        { headers: { "Content-Type": "image/png" } },
-        "?filename=garden.png",
-      ),
-      {} as never,
+      putRequest("tok", new Uint8Array([1, 2, 3]), "image/png"),
+      makeContext("tok"),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toBe("content_type_mismatch");
+    expect(body.expected).toBe("image/jpeg");
+    expect(body.got).toBe("image/png");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Body size enforcement
+// ---------------------------------------------------------------------------
+
+describe("PUT /api/mcp/upload/blob/:token — size", () => {
+  beforeEach(() => {
+    vi.mocked(verifyUploadToken).mockReturnValue({
+      ok: true,
+      payload: VALID_PAYLOAD,
+    });
+  });
+
+  it("returns 400 for an empty body", async () => {
+    const res = await uploadHandler(
+      putRequest("tok", new Uint8Array()),
+      makeContext("tok"),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toBe("empty_body");
+  });
+
+  it("returns 413 when the body exceeds the declared size", async () => {
+    // VALID_PAYLOAD.size = 1024; send 1025 bytes
+    const oversized = new Uint8Array(1025).fill(0xff);
+    const res = await uploadHandler(
+      putRequest("tok", oversized),
+      makeContext("tok"),
+    );
+    expect(res.status).toBe(413);
+    const body = await res.json();
+    expect(body.error).toBe("size_mismatch");
+    expect(body.declared).toBe(1024);
+    expect(body.actual).toBe(1025);
+  });
+
+  it("accepts a body smaller than the declared size", async () => {
+    vi.mocked(writeStagedUpload).mockResolvedValue(undefined);
+    const small = new Uint8Array(10).fill(0x01);
+    const res = await uploadHandler(
+      putRequest("tok", small),
+      makeContext("tok"),
+    );
+    expect(res.status).toBe(200);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Happy path + round-trip bytes
+// ---------------------------------------------------------------------------
+
+describe("PUT /api/mcp/upload/blob/:token — happy path", () => {
+  beforeEach(() => {
+    vi.mocked(verifyUploadToken).mockReturnValue({
+      ok: true,
+      payload: VALID_PAYLOAD,
+    });
+    vi.mocked(writeStagedUpload).mockResolvedValue(undefined);
+  });
+
+  it("forwards raw bytes to writeStagedUpload and returns uploadHandle", async () => {
+    const bytes = new Uint8Array([10, 20, 30, 40]);
+    const res = await uploadHandler(
+      putRequest("tok", bytes),
+      makeContext("tok"),
     );
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toEqual({ key: "returned-key" });
+    expect(body).toEqual({ uploadHandle: VALID_PAYLOAD.uploadId });
 
-    expect(uploadPhotoBytes).toHaveBeenCalledOnce();
-    const [forwardedBytes, filename, mimeType] = vi.mocked(uploadPhotoBytes)
-      .mock.calls[0];
+    expect(writeStagedUpload).toHaveBeenCalledOnce();
+    const [uploadId, forwardedBytes, contentType] =
+      vi.mocked(writeStagedUpload).mock.calls[0];
+    expect(uploadId).toBe(VALID_PAYLOAD.uploadId);
     expect(Array.from(forwardedBytes)).toEqual([10, 20, 30, 40]);
-    expect(filename).toBe("garden.png");
-    expect(mimeType).toBe("image/png");
+    expect(contentType).toBe("image/jpeg");
   });
+});
 
-  it("falls back to a default filename when none is provided", async () => {
-    vi.mocked(uploadPhotoBytes).mockResolvedValue("k");
+// ---------------------------------------------------------------------------
+// Single-use enforcement
+// ---------------------------------------------------------------------------
 
-    await uploadHandler(
-      uploadRequest(new Uint8Array([1])),
-      {} as never,
+describe("PUT /api/mcp/upload/blob/:token — single-use", () => {
+  it("returns 409 when the slot has already been claimed", async () => {
+    vi.mocked(verifyUploadToken).mockReturnValue({
+      ok: true,
+      payload: VALID_PAYLOAD,
+    });
+    vi.mocked(writeStagedUpload).mockRejectedValue(
+      new ServiceError("already_used", 409),
     );
 
-    const [, filename] = vi.mocked(uploadPhotoBytes).mock.calls[0];
-    expect(filename).toBe("upload.bin");
+    const bytes = new Uint8Array([1, 2, 3]);
+    const res = await uploadHandler(
+      putRequest("tok", bytes),
+      makeContext("tok"),
+    );
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.error).toBe("already_used");
   });
+});
 
-  it("returns 500 when the service throws", async () => {
-    vi.mocked(uploadPhotoBytes).mockRejectedValue(new Error("boom"));
+// ---------------------------------------------------------------------------
+// Storage error
+// ---------------------------------------------------------------------------
+
+describe("PUT /api/mcp/upload/blob/:token — storage error", () => {
+  it("returns 500 when writeStagedUpload throws an unexpected error", async () => {
+    vi.mocked(verifyUploadToken).mockReturnValue({
+      ok: true,
+      payload: VALID_PAYLOAD,
+    });
+    vi.mocked(writeStagedUpload).mockRejectedValue(new Error("boom"));
 
     const res = await uploadHandler(
-      uploadRequest(new Uint8Array([1, 2])),
-      {} as never,
+      putRequest("tok", new Uint8Array([1])),
+      makeContext("tok"),
     );
     expect(res.status).toBe(500);
     const body = await res.json();
