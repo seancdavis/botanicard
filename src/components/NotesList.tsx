@@ -1,7 +1,9 @@
 import { useState, useRef } from "react";
 import { Notepad, PencilSimple, Trash, Camera, X } from "@phosphor-icons/react";
+import { Editor } from "@rocktree/ash";
 import { EmptyState } from "./EmptyState";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { MarkdownContent } from "./MarkdownContent";
 import { api } from "../lib/api";
 import { useToast } from "../contexts/ToastContext";
 
@@ -15,6 +17,7 @@ interface Photo {
 interface Note {
   id: number;
   content?: string;
+  contentHtml?: string | null;
   observedAt?: string | null;
   createdAt: string;
   photos?: Photo[];
@@ -130,11 +133,11 @@ export function NotesList({ notes, onDelete, onNoteUpdated }: NotesListProps) {
           >
             {isEditing && editState ? (
               <div className="space-y-3">
-                <textarea
+                <Editor
                   value={editState.content}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setEditState((prev) =>
-                      prev ? { ...prev, content: e.target.value } : prev
+                      prev ? { ...prev, content: value } : prev
                     )
                   }
                   rows={3}
@@ -282,9 +285,11 @@ export function NotesList({ notes, onDelete, onNoteUpdated }: NotesListProps) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     {note.content && (
-                      <p className="text-sm whitespace-pre-wrap">
-                        {note.content}
-                      </p>
+                      <MarkdownContent
+                        html={note.contentHtml}
+                        fallbackMarkdown={note.content}
+                        className="text-sm"
+                      />
                     )}
                     {note.photos && note.photos.length > 0 && (
                       <div

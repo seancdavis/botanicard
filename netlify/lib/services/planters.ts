@@ -1,6 +1,7 @@
 import { eq, desc, sql } from "drizzle-orm";
 import { db, planters, houseplants, notes, photos } from "../../../db";
 import { NotFoundError, ValidationError } from "../errors";
+import { renderMarkdown } from "../markdown";
 
 export interface PlanterInput {
   name?: string;
@@ -67,12 +68,14 @@ export async function createPlanter(input: PlanterInput) {
   }
 
   const cardId = await generateCardId();
+  const description = input.description?.trim() || null;
   const [created] = await db
     .insert(planters)
     .values({
       cardId,
       name: input.name.trim(),
-      description: input.description?.trim() || null,
+      description,
+      descriptionHtml: renderMarkdown(description),
       photoBlobKey: input.photoBlobKey || null,
       status: input.status || "active",
     })
@@ -86,11 +89,13 @@ export async function updatePlanter(id: number, input: PlanterInput) {
     throw new ValidationError("Name is required");
   }
 
+  const description = input.description?.trim() || null;
   const [updated] = await db
     .update(planters)
     .set({
       name: input.name.trim(),
-      description: input.description?.trim() || null,
+      description,
+      descriptionHtml: renderMarkdown(description),
       photoBlobKey: input.photoBlobKey ?? undefined,
       status: input.status || "active",
       updatedAt: new Date(),

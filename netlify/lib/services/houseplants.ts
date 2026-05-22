@@ -1,6 +1,7 @@
 import { eq, desc, sql } from "drizzle-orm";
 import { db, houseplants, planters, notes, photos } from "../../../db";
 import { NotFoundError, ValidationError } from "../errors";
+import { renderMarkdown } from "../markdown";
 
 export interface HouseplantInput {
   name?: string;
@@ -25,6 +26,7 @@ export async function listHouseplants() {
       cardId: houseplants.cardId,
       name: houseplants.name,
       description: houseplants.description,
+      descriptionHtml: houseplants.descriptionHtml,
       parentId: houseplants.parentId,
       planterId: houseplants.planterId,
       status: houseplants.status,
@@ -108,12 +110,14 @@ export async function createHouseplant(input: HouseplantInput) {
   }
 
   const cardId = await generateCardId();
+  const description = input.description?.trim() || null;
   const [created] = await db
     .insert(houseplants)
     .values({
       cardId,
       name: input.name.trim(),
-      description: input.description?.trim() || null,
+      description,
+      descriptionHtml: renderMarkdown(description),
       parentId: input.parentId || null,
       planterId: input.planterId || null,
       status: input.status || "active",
@@ -128,11 +132,13 @@ export async function updateHouseplant(id: number, input: HouseplantInput) {
     throw new ValidationError("Name is required");
   }
 
+  const description = input.description?.trim() || null;
   const [updated] = await db
     .update(houseplants)
     .set({
       name: input.name.trim(),
-      description: input.description?.trim() || null,
+      description,
+      descriptionHtml: renderMarkdown(description),
       parentId: input.parentId || null,
       planterId: input.planterId || null,
       status: input.status || "active",

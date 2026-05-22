@@ -7,6 +7,7 @@ import {
   photos,
 } from "../../../db";
 import { NotFoundError, ValidationError } from "../errors";
+import { renderMarkdown } from "../markdown";
 
 export interface CreateCellGroupInput {
   seasonId?: number;
@@ -62,6 +63,7 @@ const listSelectFields = {
   actualYield: gardenCellGroups.actualYield,
   status: gardenCellGroups.status,
   description: gardenCellGroups.description,
+  descriptionHtml: gardenCellGroups.descriptionHtml,
   createdAt: gardenCellGroups.createdAt,
   updatedAt: gardenCellGroups.updatedAt,
   primaryPhotoBlobKey: sql<string | null>`(
@@ -128,6 +130,7 @@ export async function createCellGroup(input: CreateCellGroupInput) {
   }
 
   const cardId = await generateCardId(input.seasonId);
+  const description = input.description?.trim() || null;
   const [group] = await db
     .insert(gardenCellGroups)
     .values({
@@ -139,7 +142,8 @@ export async function createCellGroup(input: CreateCellGroupInput) {
       seedCount: input.seedCount || null,
       desiredYield: input.desiredYield || null,
       status: input.status || "seeded",
-      description: input.description?.trim() || null,
+      description,
+      descriptionHtml: renderMarkdown(description),
     })
     .returning();
 
@@ -151,6 +155,7 @@ export async function updateCellGroup(id: number, input: UpdateCellGroupInput) {
     throw new ValidationError("plantType is required");
   }
 
+  const description = input.description?.trim() || null;
   const [updated] = await db
     .update(gardenCellGroups)
     .set({
@@ -161,7 +166,8 @@ export async function updateCellGroup(id: number, input: UpdateCellGroupInput) {
       desiredYield: input.desiredYield || null,
       actualYield: input.actualYield || null,
       status: input.status || "seeded",
-      description: input.description?.trim() || null,
+      description,
+      descriptionHtml: renderMarkdown(description),
       updatedAt: new Date(),
     })
     .where(eq(gardenCellGroups.id, id))

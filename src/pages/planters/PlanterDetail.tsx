@@ -7,6 +7,7 @@ import { Card } from "../../components/Card";
 import { StatusBadge } from "../../components/StatusBadge";
 import { NotesList } from "../../components/NotesList";
 import { AddNoteForm } from "../../components/AddNoteForm";
+import { MarkdownContent } from "../../components/MarkdownContent";
 import { PageHeader } from "../../components/PageHeader";
 import { Skeleton } from "../../components/Skeleton";
 
@@ -23,6 +24,7 @@ interface PlanterDetailData {
   cardId: string;
   name: string;
   description?: string;
+  descriptionHtml?: string | null;
   photoBlobKey?: string | null;
   status: string;
   createdAt: string;
@@ -111,9 +113,11 @@ export function PlanterDetail() {
               <StatusBadge status={planter.status} />
             </div>
             {planter.description && (
-              <p className="text-sm text-text/70 whitespace-pre-wrap">
-                {planter.description}
-              </p>
+              <MarkdownContent
+                html={planter.descriptionHtml}
+                fallbackMarkdown={planter.description}
+                className="text-sm text-text/70"
+              />
             )}
             <p className="text-xs text-text/40 mt-3">
               Added{" "}

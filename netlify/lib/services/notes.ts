@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db, notes, photos } from "../../../db";
 import { NotFoundError, ValidationError } from "../errors";
+import { renderMarkdown } from "../markdown";
 
 export interface CreateNoteInput {
   entityType?: string;
@@ -23,12 +24,14 @@ export async function createNote(input: CreateNoteInput) {
     throw new ValidationError("entityType and entityId are required");
   }
 
+  const content = input.content || null;
   const [note] = await db
     .insert(notes)
     .values({
       entityType: input.entityType,
       entityId: input.entityId,
-      content: input.content || null,
+      content,
+      contentHtml: renderMarkdown(content),
       ...(input.observedAt ? { observedAt: new Date(input.observedAt) } : {}),
       ...(input.createdAt ? { createdAt: new Date(input.createdAt) } : {}),
     })
@@ -52,6 +55,7 @@ export async function updateNote(id: number, input: UpdateNoteInput) {
     .update(notes)
     .set({
       content: input.content,
+      contentHtml: renderMarkdown(input.content),
       ...(input.observedAt !== undefined
         ? { observedAt: input.observedAt ? new Date(input.observedAt) : null }
         : {}),

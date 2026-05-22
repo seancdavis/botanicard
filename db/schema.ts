@@ -11,6 +11,7 @@ export const houseplants = pgTable("houseplants", {
   cardId: varchar("card_id", { length: 4 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
+  descriptionHtml: text("description_html"),
   parentId: integer("parent_id"),
   planterId: integer("planter_id"),
   status: varchar("status", { length: 50 }).default("active").notNull(),
@@ -23,6 +24,7 @@ export const planters = pgTable("planters", {
   cardId: varchar("card_id", { length: 10 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
+  descriptionHtml: text("description_html"),
   photoBlobKey: varchar("photo_blob_key", { length: 500 }),
   status: varchar("status", { length: 50 }).default("active").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -34,6 +36,7 @@ export const gardenSeasons = pgTable("garden_seasons", {
   name: varchar("name", { length: 255 }).notNull(),
   year: integer("year").notNull(),
   description: text("description"),
+  descriptionHtml: text("description_html"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -49,6 +52,7 @@ export const gardenCellGroups = pgTable("garden_cell_groups", {
   actualYield: integer("actual_yield"),
   status: varchar("status", { length: 50 }).default("seeded").notNull(),
   description: text("description"),
+  descriptionHtml: text("description_html"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -58,6 +62,7 @@ export const notes = pgTable("notes", {
   entityType: varchar("entity_type", { length: 50 }).notNull(),
   entityId: integer("entity_id").notNull(),
   content: text("content"),
+  contentHtml: text("content_html"),
   observedAt: timestamp("observed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

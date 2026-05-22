@@ -5,12 +5,14 @@ import { Card } from "../../components/Card";
 import { CardGridSkeleton } from "../../components/Skeleton";
 import { PageHeader } from "../../components/PageHeader";
 import { EmptyState } from "../../components/EmptyState";
+import { MarkdownContent } from "../../components/MarkdownContent";
 
 interface Season {
   id: number;
   name: string;
   year: number;
   description?: string;
+  descriptionHtml?: string | null;
   groupCount: number;
 }
 
@@ -75,9 +77,11 @@ export function SeasonList() {
                 {season.groupCount} group{season.groupCount !== 1 ? "s" : ""}
               </p>
               {season.description && (
-                <p className="text-sm text-text/60 mt-2 line-clamp-2">
-                  {season.description}
-                </p>
+                <MarkdownContent
+                  html={season.descriptionHtml}
+                  fallbackMarkdown={season.description}
+                  className="text-sm text-text/60 mt-2 line-clamp-2"
+                />
               )}
             </Card>
           ))}

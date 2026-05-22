@@ -7,6 +7,7 @@ import { Card } from "../../components/Card";
 import { StatusBadge } from "../../components/StatusBadge";
 import { NotesList } from "../../components/NotesList";
 import { AddNoteForm } from "../../components/AddNoteForm";
+import { MarkdownContent } from "../../components/MarkdownContent";
 import { PageHeader } from "../../components/PageHeader";
 import { Skeleton } from "../../components/Skeleton";
 
@@ -37,6 +38,7 @@ interface CellGroupDetailData {
   actualYield?: number;
   status: string;
   description?: string;
+  descriptionHtml?: string | null;
   createdAt: string;
   season?: { id: number; name: string; year: number };
   primaryPhoto?: Photo | null;
@@ -165,9 +167,11 @@ export function CellGroupDetail() {
               )}
             </div>
             {group.description && (
-              <p className="text-sm text-text/70 whitespace-pre-wrap mt-2">
-                {group.description}
-              </p>
+              <MarkdownContent
+                html={group.descriptionHtml}
+                fallbackMarkdown={group.description}
+                className="text-sm text-text/70 mt-2"
+              />
             )}
           </Card>
 

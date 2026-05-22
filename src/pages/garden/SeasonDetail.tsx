@@ -7,6 +7,7 @@ import { CardGridSkeleton } from "../../components/Skeleton";
 import { PageHeader } from "../../components/PageHeader";
 import { Skeleton } from "../../components/Skeleton";
 import { EmptyState } from "../../components/EmptyState";
+import { MarkdownContent } from "../../components/MarkdownContent";
 
 interface CellGroup {
   id: number;
@@ -23,6 +24,7 @@ interface SeasonDetailData {
   name: string;
   year: number;
   description?: string;
+  descriptionHtml?: string | null;
   groups: CellGroup[];
 }
 
@@ -70,7 +72,11 @@ export function SeasonDetail() {
       />
 
       {season.description && (
-        <p className="text-sm text-text/60 mb-6 -mt-4">{season.description}</p>
+        <MarkdownContent
+          html={season.descriptionHtml}
+          fallbackMarkdown={season.description}
+          className="text-sm text-text/60 mb-6 -mt-4"
+        />
       )}
 
       {season.groups.length === 0 ? (

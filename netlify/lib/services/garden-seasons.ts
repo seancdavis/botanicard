@@ -1,6 +1,7 @@
 import { eq, desc, sql } from "drizzle-orm";
 import { db, gardenSeasons, gardenCellGroups } from "../../../db";
 import { NotFoundError, ValidationError } from "../errors";
+import { renderMarkdown } from "../markdown";
 
 export interface GardenSeasonInput {
   name?: string;
@@ -66,12 +67,14 @@ export async function createGardenSeason(input: GardenSeasonInput) {
     throw new ValidationError("Name and year are required");
   }
 
+  const description = input.description?.trim() || null;
   const [created] = await db
     .insert(gardenSeasons)
     .values({
       name: input.name.trim(),
       year: input.year,
-      description: input.description?.trim() || null,
+      description,
+      descriptionHtml: renderMarkdown(description),
     })
     .returning();
 
@@ -83,12 +86,14 @@ export async function updateGardenSeason(id: number, input: GardenSeasonInput) {
     throw new ValidationError("Name and year are required");
   }
 
+  const description = input.description?.trim() || null;
   const [updated] = await db
     .update(gardenSeasons)
     .set({
       name: input.name.trim(),
       year: input.year,
-      description: input.description?.trim() || null,
+      description,
+      descriptionHtml: renderMarkdown(description),
     })
     .where(eq(gardenSeasons.id, id))
     .returning();

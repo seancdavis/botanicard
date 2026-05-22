@@ -6,12 +6,14 @@ import { StatusBadge } from "../../components/StatusBadge";
 import { CardGridSkeleton } from "../../components/Skeleton";
 import { EmptyState } from "../../components/EmptyState";
 import { PageHeader } from "../../components/PageHeader";
+import { MarkdownContent } from "../../components/MarkdownContent";
 
 interface Houseplant {
   id: number;
   cardId: string;
   name: string;
   description?: string;
+  descriptionHtml?: string | null;
   status: string;
   primaryPhotoBlobKey?: string | null;
 }
@@ -87,9 +89,11 @@ export function HouseplantList() {
                   {plant.name}
                 </h3>
                 {plant.description && (
-                  <p className="text-sm text-text/60 mt-1 line-clamp-2">
-                    {plant.description}
-                  </p>
+                  <MarkdownContent
+                    html={plant.descriptionHtml}
+                    fallbackMarkdown={plant.description}
+                    className="text-sm text-text/60 mt-1 line-clamp-2"
+                  />
                 )}
               </div>
             </Card>

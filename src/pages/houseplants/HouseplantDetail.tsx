@@ -7,6 +7,7 @@ import { Card } from "../../components/Card";
 import { StatusBadge } from "../../components/StatusBadge";
 import { NotesList } from "../../components/NotesList";
 import { AddNoteForm } from "../../components/AddNoteForm";
+import { MarkdownContent } from "../../components/MarkdownContent";
 import { PageHeader } from "../../components/PageHeader";
 import { Skeleton } from "../../components/Skeleton";
 
@@ -30,6 +31,7 @@ interface HouseplantDetail {
   cardId: string;
   name: string;
   description?: string;
+  descriptionHtml?: string | null;
   status: string;
   parentId?: number;
   planterId?: number;
@@ -122,9 +124,11 @@ export function HouseplantDetail() {
               <StatusBadge status={plant.status} />
             </div>
             {plant.description && (
-              <p className="text-sm text-text/70 whitespace-pre-wrap">
-                {plant.description}
-              </p>
+              <MarkdownContent
+                html={plant.descriptionHtml}
+                fallbackMarkdown={plant.description}
+                className="text-sm text-text/70"
+              />
             )}
             <p className="text-xs text-text/40 mt-3">
               Added{" "}
