@@ -140,15 +140,18 @@ A remote MCP server lives at `/api/mcp`, implemented in `netlify/functions/mcp.t
 - **Exception:** tests for Netlify Functions go in `netlify/tests/`, not `netlify/functions/`. Netlify treats every top-level file in `netlify/functions/` as a deployable function and rejects names containing `.` (so `*.test.ts` adjacent to functions breaks the deploy).
 - Server-side tests mock `@netlify/identity`'s `getUser` (auth) or the service modules (MCP) to control behavior without hitting the DB.
 - The test config sets a fake `NETLIFY_DB_URL` so Drizzle's module-level init succeeds; tests must not actually query the database.
-- CI runs `npm test` and `npm run build` on every PR via `.github/workflows/ci.yml`.
+- CI runs `pnpm test` and `pnpm run build` on every PR via `.github/workflows/ci.yml`.
 
 ## Commands
 
-- `npm run dev` — Start dev server (note: Identity does not work locally — deploy to a preview to test auth)
-- `npm run build` — Type-check and build
-- `npm test` — Run tests once
-- `npm run test:watch` — Run tests in watch mode
-- `npm run db:generate` — Generate migration
-- `npm run db:migrate` — Run migrations (via `netlify dev:exec`)
-- `npm run db:push` — Push schema directly (via `netlify dev:exec`)
-- `npm run db:studio` — Database UI (via `netlify dev:exec`)
+Package manager is pnpm (pinned via the `packageManager` field).
+
+- `pnpm install` — Install dependencies
+- `pnpm dev` — Start dev server (note: Identity does not work locally — deploy to a preview to test auth)
+- `pnpm build` — Type-check and build
+- `pnpm test` — Run tests once
+- `pnpm test:watch` — Run tests in watch mode
+- `pnpm db:generate` — Generate migration
+- `pnpm db:migrate` — Run migrations (via `netlify dev:exec`)
+- `pnpm db:push` — Push schema directly (via `netlify dev:exec`)
+- `pnpm db:studio` — Database UI (via `netlify dev:exec`)

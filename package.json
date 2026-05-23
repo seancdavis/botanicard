@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "packageManager": "pnpm@11.2.2",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -18,7 +19,9 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
+    "@netlify/blobs": "^10.7.8",
     "@netlify/database": "^0.7.0",
+    "@netlify/functions": "^5.2.2",
     "@netlify/identity": "^1.2.0",
     "@netlify/neon": "^0.1.2",
     "@phosphor-icons/react": "^2.1.7",

@@ -11,9 +11,15 @@ importers:
       '@neondatabase/serverless':
         specifier: ^1.0.2
         version: 1.1.0
+      '@netlify/blobs':
+        specifier: ^10.7.8
+        version: 10.7.8
       '@netlify/database':
         specifier: ^0.7.0
         version: 0.7.0
+      '@netlify/functions':
+        specifier: ^5.2.2
+        version: 5.2.2
       '@netlify/identity':
         specifier: ^1.2.0
         version: 1.2.0
