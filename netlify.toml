@@ -5,6 +5,28 @@
 [dev]
   command = "pnpm run dev"
 
+# Image CDN presets — source is /api/photos/:key (Netlify Blobs, public GET).
+# Order matters: these must come before the SPA fallback.
+[[redirects]]
+  from = "/img/thumb/*"
+  to = "/.netlify/images?url=/api/photos/:splat&w=192&h=192&fit=cover"
+  status = 200
+
+[[redirects]]
+  from = "/img/card/*"
+  to = "/.netlify/images?url=/api/photos/:splat&w=640&h=320&fit=cover"
+  status = 200
+
+[[redirects]]
+  from = "/img/hero/*"
+  to = "/.netlify/images?url=/api/photos/:splat&w=1200&h=512&fit=cover"
+  status = 200
+
+[[redirects]]
+  from = "/img/full/*"
+  to = "/.netlify/images?url=/api/photos/:splat"
+  status = 200
+
 # SPA fallback
 [[redirects]]
   from = "/*"

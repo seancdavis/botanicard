@@ -169,7 +169,7 @@ export function NotesList({ notes, onDelete, onNoteUpdated }: NotesListProps) {
                       return (
                         <div key={photo.id} className="relative">
                           <img
-                            src={`/api/photos/${photo.blobKey}`}
+                            src={`/img/thumb/${photo.blobKey}`}
                             alt={photo.caption || photo.filename || "Photo"}
                             className={`w-24 h-24 object-cover rounded-lg border border-border transition-opacity ${
                               isMarkedForRemoval ? "opacity-30" : ""
@@ -294,7 +294,7 @@ export function NotesList({ notes, onDelete, onNoteUpdated }: NotesListProps) {
                         {note.photos.map((photo) => (
                           <img
                             key={photo.id}
-                            src={`/api/photos/${photo.blobKey}`}
+                            src={`/img/thumb/${photo.blobKey}`}
                             alt={
                               photo.caption || photo.filename || "Photo"
                             }

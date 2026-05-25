@@ -126,7 +126,7 @@ export function CellGroupDetail() {
 
       {group.primaryPhoto && (
         <img
-          src={`/api/photos/${group.primaryPhoto.blobKey}`}
+          src={`/img/hero/${group.primaryPhoto.blobKey}`}
           alt={group.plantType}
           className="w-full h-64 object-cover rounded-xl mb-6"
         />

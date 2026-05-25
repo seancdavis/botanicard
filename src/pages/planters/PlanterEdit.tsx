@@ -71,7 +71,7 @@ export function PlanterEdit() {
   }
 
   const currentPhotoSrc = photoPreview
-    || (existingBlobKey ? `/api/photos/${existingBlobKey}` : null);
+    || (existingBlobKey ? `/img/hero/${existingBlobKey}` : null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

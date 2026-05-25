@@ -157,7 +157,7 @@ export function BlobCleanup() {
           >
             <div className="relative">
               <img
-                src={`/api/photos/${key}`}
+                src={`/img/thumb/${key}`}
                 alt={key}
                 className="w-full aspect-square object-cover"
                 loading="lazy"

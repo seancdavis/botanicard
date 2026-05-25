@@ -71,7 +71,7 @@ export function PlanterList() {
             >
               {planter.photoBlobKey && (
                 <img
-                  src={`/api/photos/${planter.photoBlobKey}`}
+                  src={`/img/card/${planter.photoBlobKey}`}
                   alt={planter.name}
                   className="w-full h-40 object-cover"
                 />
