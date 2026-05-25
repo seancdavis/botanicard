@@ -60,9 +60,14 @@ export async function prepareUpload(
   return { uploadUrl, uploadHandle: uploadId };
 }
 
+/** Blob key the agent's bytes are written under. Matches uploadPhotoBytes shape. */
+function blobKeyFor(uploadId: string, filename: string): string {
+  return `${uploadId}-${filename}`;
+}
+
 /**
  * Atomically claim the upload slot (pending → uploaded) and write raw bytes
- * to the `uploads` blob store at `staging/<uploadId>`.
+ * to the `photos` blob store under `<uploadId>-<filename>`.
  *
  * Throws ServiceError(409) if the slot has already been claimed.
  */
@@ -81,15 +86,15 @@ export async function writeStagedUpload(
         eq(uploadHandles.status, "pending"),
       ),
     )
-    .returning({ uploadId: uploadHandles.uploadId });
+    .returning({ filename: uploadHandles.filename });
 
   if (updated.length === 0) {
     throw new ServiceError("already_used", 409);
   }
 
-  const store = getStore("uploads");
-  const blobKey = `staging/${uploadId}`;
-  await store.set(blobKey, bytes, { metadata: { contentType } });
+  const store = getStore("photos");
+  const key = blobKeyFor(uploadId, updated[0].filename);
+  await store.set(key, bytes, { metadata: { contentType } });
 
   console.info(`[MCP] mcp-upload ok ${uploadId} (${bytes.byteLength} bytes)`);
 }
@@ -121,10 +126,10 @@ export async function finalizeUpload(
     throw new ValidationError(`Unexpected upload status: ${row.status}`);
   }
 
-  const blobKey = `staging/${uploadHandle}`;
-  const store = getStore("uploads");
-  const blob = await store.get(blobKey, { type: "arrayBuffer" });
-  if (!blob) {
+  const key = blobKeyFor(uploadHandle, row.filename);
+  const store = getStore("photos");
+  const meta = await store.getMetadata(key);
+  if (!meta) {
     throw new ValidationError("Uploaded file not found in storage");
   }
 
@@ -134,5 +139,5 @@ export async function finalizeUpload(
     .where(eq(uploadHandles.uploadId, uploadHandle));
 
   console.info("[MCP] finalize_upload ok", uploadHandle);
-  return { key: blobKey };
+  return { key };
 }

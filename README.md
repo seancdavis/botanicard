@@ -97,15 +97,15 @@ Response:
   "result": {
     "content": [{
       "type": "text",
-      "text": "{\"key\":\"staging/<uuid>\"}"
+      "text": "{\"key\":\"<uuid>-<filename>\"}"
     }]
   }
 }
 ```
 
 The returned `key` can be passed directly to:
-- `create_note` → `photoKeys: ["staging/<uuid>"]`
-- `update_planter` → `photoBlobKey: "staging/<uuid>"`
+- `create_note` → `photoKeys: ["<uuid>-<filename>"]`
+- `update_planter` → `photoBlobKey: "<uuid>-<filename>"`
 
 ### Security
 

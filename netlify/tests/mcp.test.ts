@@ -307,7 +307,7 @@ describe("MCP tools/call", () => {
   });
 
   it("finalize_upload calls finalizeUpload service and returns { key }", async () => {
-    vi.mocked(finalizeUpload).mockResolvedValue({ key: "staging/uuid-abc" });
+    vi.mocked(finalizeUpload).mockResolvedValue({ key: "uuid-abc-photo.jpg" });
 
     const res = await mcpHandler(
       authedRequest({
@@ -326,7 +326,7 @@ describe("MCP tools/call", () => {
     expect(finalizeUpload).toHaveBeenCalledWith("uuid-abc");
     expect(body.result.isError).toBeUndefined();
     const parsed = JSON.parse(body.result.content[0].text);
-    expect(parsed).toEqual({ key: "staging/uuid-abc" });
+    expect(parsed).toEqual({ key: "uuid-abc-photo.jpg" });
   });
 
   it("get_photo returns image content (not text)", async () => {
