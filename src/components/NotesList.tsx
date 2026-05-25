@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Notepad, PencilSimple, Trash, Camera, X } from "@phosphor-icons/react";
+import { Editor } from "@rocktree/ash";
 import { EmptyState } from "./EmptyState";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { api } from "../lib/api";
@@ -130,11 +131,11 @@ export function NotesList({ notes, onDelete, onNoteUpdated }: NotesListProps) {
           >
             {isEditing && editState ? (
               <div className="space-y-3">
-                <textarea
+                <Editor
                   value={editState.content}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setEditState((prev) =>
-                      prev ? { ...prev, content: e.target.value } : prev
+                      prev ? { ...prev, content: value } : prev
                     )
                   }
                   rows={3}
