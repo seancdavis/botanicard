@@ -23,13 +23,17 @@ vi.mock("../lib/services/notes", () => ({
   updateNote: vi.fn(),
 }));
 vi.mock("../lib/services/photos", () => ({
-  uploadPhotoBytes: vi.fn(),
   getPhoto: vi.fn(),
+}));
+vi.mock("../lib/services/uploads", () => ({
+  prepareUpload: vi.fn(),
+  finalizeUpload: vi.fn(),
 }));
 
 import { listHouseplants, createHouseplant } from "../lib/services/houseplants";
 import { createNote } from "../lib/services/notes";
-import { getPhoto, uploadPhotoBytes } from "../lib/services/photos";
+import { getPhoto } from "../lib/services/photos";
+import { prepareUpload, finalizeUpload } from "../lib/services/uploads";
 import { ValidationError } from "../lib/errors";
 import { summarizeArgs } from "../lib/mcp/dispatch";
 import mcpHandler from "../functions/mcp";
@@ -137,7 +141,7 @@ describe("MCP protocol methods", () => {
     expect(typeof body.result.protocolVersion).toBe("string");
   });
 
-  it("tools/list returns all 16 tools by name", async () => {
+  it("tools/list returns all 17 tools by name", async () => {
     const res = await mcpHandler(
       authedRequest({ jsonrpc: "2.0", id: 2, method: "tools/list" }),
       {} as never,
@@ -150,6 +154,7 @@ describe("MCP protocol methods", () => {
         "create_houseplant",
         "create_note",
         "create_planter",
+        "finalize_upload",
         "get_garden_cell_group",
         "get_houseplant",
         "get_photo",
@@ -157,11 +162,11 @@ describe("MCP protocol methods", () => {
         "list_garden_cell_groups",
         "list_houseplants",
         "list_planters",
+        "prepare_upload",
         "update_garden_cell_group",
         "update_houseplant",
         "update_note",
         "update_planter",
-        "upload_photo",
       ].sort(),
     );
   });
@@ -264,10 +269,11 @@ describe("MCP tools/call", () => {
     expect(body.result.content[0].text).toContain("Unknown tool: nope");
   });
 
-  it("upload_photo decodes base64 and calls the service with bytes", async () => {
-    vi.mocked(uploadPhotoBytes).mockResolvedValue("test-key");
-    const original = "hello world";
-    const dataB64 = Buffer.from(original).toString("base64");
+  it("prepare_upload calls prepareUpload service and returns uploadUrl + uploadHandle", async () => {
+    vi.mocked(prepareUpload).mockResolvedValue({
+      uploadUrl: "https://example.com/api/mcp/upload/blob/tok123",
+      uploadHandle: "uuid-abc",
+    });
 
     const res = await mcpHandler(
       authedRequest({
@@ -275,11 +281,11 @@ describe("MCP tools/call", () => {
         id: 8,
         method: "tools/call",
         params: {
-          name: "upload_photo",
+          name: "prepare_upload",
           arguments: {
-            data: dataB64,
-            filename: "x.txt",
-            mimeType: "text/plain",
+            filename: "photo.jpg",
+            contentType: "image/jpeg",
+            size: 204800,
           },
         },
       }),
@@ -287,14 +293,40 @@ describe("MCP tools/call", () => {
     );
     const body = await res.json();
 
-    expect(uploadPhotoBytes).toHaveBeenCalledOnce();
-    const [bytes, filename, mimeType] = vi.mocked(uploadPhotoBytes).mock
-      .calls[0];
-    expect(Buffer.from(bytes).toString()).toBe(original);
-    expect(filename).toBe("x.txt");
-    expect(mimeType).toBe("text/plain");
+    expect(prepareUpload).toHaveBeenCalledWith({
+      filename: "photo.jpg",
+      contentType: "image/jpeg",
+      size: 204800,
+    });
+    expect(body.result.isError).toBeUndefined();
     const parsed = JSON.parse(body.result.content[0].text);
-    expect(parsed).toEqual({ key: "test-key" });
+    expect(parsed).toEqual({
+      uploadUrl: "https://example.com/api/mcp/upload/blob/tok123",
+      uploadHandle: "uuid-abc",
+    });
+  });
+
+  it("finalize_upload calls finalizeUpload service and returns { key }", async () => {
+    vi.mocked(finalizeUpload).mockResolvedValue({ key: "uuid-abc-photo.jpg" });
+
+    const res = await mcpHandler(
+      authedRequest({
+        jsonrpc: "2.0",
+        id: 9,
+        method: "tools/call",
+        params: {
+          name: "finalize_upload",
+          arguments: { uploadHandle: "uuid-abc" },
+        },
+      }),
+      {} as never,
+    );
+    const body = await res.json();
+
+    expect(finalizeUpload).toHaveBeenCalledWith("uuid-abc");
+    expect(body.result.isError).toBeUndefined();
+    const parsed = JSON.parse(body.result.content[0].text);
+    expect(parsed).toEqual({ key: "uuid-abc-photo.jpg" });
   });
 
   it("get_photo returns image content (not text)", async () => {
@@ -307,7 +339,7 @@ describe("MCP tools/call", () => {
     const res = await mcpHandler(
       authedRequest({
         jsonrpc: "2.0",
-        id: 9,
+        id: 10,
         method: "tools/call",
         params: { name: "get_photo", arguments: { key: "some-key" } },
       }),
@@ -338,38 +370,5 @@ describe("MCP audit log arg summarization", () => {
     expect(typeof result.data).toBe("string");
     expect((result.data as string).length).toBeLessThan(100);
     expect(result.data).toContain("<10000 chars>");
-  });
-
-  it("does not include the long base64 payload in upload_photo logs", async () => {
-    vi.mocked(uploadPhotoBytes).mockResolvedValue("test-key");
-    const longData = "A".repeat(10000);
-    const consoleSpy = vi
-      .spyOn(console, "info")
-      .mockImplementation(() => undefined);
-
-    await mcpHandler(
-      authedRequest({
-        jsonrpc: "2.0",
-        id: 100,
-        method: "tools/call",
-        params: {
-          name: "upload_photo",
-          arguments: {
-            data: longData,
-            filename: "x.png",
-            mimeType: "image/png",
-          },
-        },
-      }),
-      {} as never,
-    );
-
-    const allLogged = consoleSpy.mock.calls
-      .map((c) => c.map(String).join(" "))
-      .join("\n");
-
-    expect(allLogged).not.toContain(longData);
-    expect(allLogged).toContain("<10000 chars>");
-    consoleSpy.mockRestore();
   });
 });

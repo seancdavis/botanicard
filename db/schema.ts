@@ -6,6 +6,18 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
+export const uploadHandles = pgTable("upload_handles", {
+  uploadId: varchar("upload_id", { length: 100 }).primaryKey(),
+  /** 'pending' → 'uploaded' → 'finalized' */
+  status: varchar("status", { length: 20 }).default("pending").notNull(),
+  contentType: varchar("content_type", { length: 255 }).notNull(),
+  declaredSize: integer("declared_size").notNull(),
+  uploadedSize: integer("uploaded_size"),
+  filename: varchar("filename", { length: 255 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const houseplants = pgTable("houseplants", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   cardId: varchar("card_id", { length: 4 }).notNull().unique(),
