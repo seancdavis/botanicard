@@ -30,8 +30,8 @@ importers:
         specifier: ^2.1.7
         version: 2.1.10(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       drizzle-orm:
-        specifier: ^1.0.0-beta.22
-        version: 1.0.0-rc.4-5d5b77c(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.0)(pg@8.21.0)(zod@4.4.3)
+        specifier: 1.0.0-beta.22
+        version: 1.0.0-beta.22(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.0)(pg@8.21.0)(zod@4.4.3)
       react:
         specifier: ^19.2.0
         version: 19.2.6
@@ -2360,12 +2360,13 @@ packages:
     resolution: {integrity: sha512-7OZcmQUrdGI+DUNNsKBn1aW8qSoKuTH7d0mYgSP8bAzdFzKoovxEFnoGQp2dVs82EOJeYycqRtciopszwUf8bw==}
     hasBin: true
 
-  drizzle-orm@1.0.0-rc.4-5d5b77c:
-    resolution: {integrity: sha512-Oq9W4B11PracWY9cuCLTFT+JA5kXqR6rBmWcM8oh0xwLgCviVl9wh6ZuWX7Zpv1Jir/8W+M37syvjSYtj1f5iA==}
+  drizzle-orm@1.0.0-beta.22:
+    resolution: {integrity: sha512-F+DZyVIvH0oVKa/w08Cle1xfoH+pc+htIXHG/frnMLG72aby9NYYr9oc+9XvghnoO4umxFItduz0OMmQJMnenw==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
-      '@effect/sql-pg': '>=4.0.0-beta.58 || >=4.0.0'
+      '@effect/sql': ^0.48.5
+      '@effect/sql-pg': ^0.49.7
       '@electric-sql/pglite': '>=0.2.0'
       '@libsql/client': '>=0.10.0'
       '@libsql/client-wasm': '>=0.10.0'
@@ -2389,8 +2390,8 @@ packages:
       arktype: '>=2.0.0'
       better-sqlite3: '>=9.3.0'
       bun-types: '*'
-      effect: '>=4.0.0-beta.58 || >=4.0.0'
       expo-sqlite: '>=14.0.0'
+      gel: '>=2'
       mssql: ^11.0.1
       mysql2: '>=2'
       pg: '>=8'
@@ -2404,6 +2405,8 @@ packages:
       '@aws-sdk/client-rds-data':
         optional: true
       '@cloudflare/workers-types':
+        optional: true
+      '@effect/sql':
         optional: true
       '@effect/sql-pg':
         optional: true
@@ -2453,9 +2456,9 @@ packages:
         optional: true
       bun-types:
         optional: true
-      effect:
-        optional: true
       expo-sqlite:
+        optional: true
+      gel:
         optional: true
       mssql:
         optional: true
@@ -6799,7 +6802,7 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.22.3
 
-  drizzle-orm@1.0.0-rc.4-5d5b77c(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.0)(pg@8.21.0)(zod@4.4.3):
+  drizzle-orm@1.0.0-beta.22(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.0)(pg@8.21.0)(zod@4.4.3):
     optionalDependencies:
       '@neondatabase/serverless': 1.1.0
       '@opentelemetry/api': 1.9.0
