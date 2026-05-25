@@ -108,7 +108,7 @@ export function HouseplantDetail() {
 
       {plant.primaryPhoto && (
         <img
-          src={`/api/photos/${plant.primaryPhoto.blobKey}`}
+          src={`/img/hero/${plant.primaryPhoto.blobKey}`}
           alt={plant.name}
           className="w-full h-64 object-cover rounded-xl mb-6"
         />

@@ -71,7 +71,7 @@ export function HouseplantList() {
             >
               {plant.primaryPhotoBlobKey && (
                 <img
-                  src={`/api/photos/${plant.primaryPhotoBlobKey}`}
+                  src={`/img/card/${plant.primaryPhotoBlobKey}`}
                   alt={plant.name}
                   className="w-full h-40 object-cover"
                 />

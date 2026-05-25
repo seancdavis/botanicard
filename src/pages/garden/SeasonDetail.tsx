@@ -94,7 +94,7 @@ export function SeasonDetail() {
               <Card className="overflow-hidden hover:shadow-md transition-shadow">
                 {group.primaryPhotoBlobKey && (
                   <img
-                    src={`/api/photos/${group.primaryPhotoBlobKey}`}
+                    src={`/img/card/${group.primaryPhotoBlobKey}`}
                     alt={group.plantType}
                     className="w-full h-40 object-cover"
                   />

@@ -97,7 +97,7 @@ export function PlanterDetail() {
 
       {planter.photoBlobKey && (
         <img
-          src={`/api/photos/${planter.photoBlobKey}`}
+          src={`/img/hero/${planter.photoBlobKey}`}
           alt={planter.name}
           className="w-full h-64 object-cover rounded-xl mb-6"
         />
