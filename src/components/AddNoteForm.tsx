@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Camera } from "@phosphor-icons/react";
+import { Editor } from "@rocktree/ash";
 import { api } from "../lib/api";
 import { useToast } from "../contexts/ToastContext";
 
@@ -61,9 +62,9 @@ export function AddNoteForm({ entityType, entityId, onNoteAdded }: AddNoteFormPr
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <textarea
+      <Editor
         value={content}
-        onChange={(e) => setContent(e.target.value)}
+        onChange={setContent}
         placeholder="Add a note..."
         rows={3}
         className="w-full border border-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Editor } from "@rocktree/ash";
 import { api } from "../../lib/api";
 import { useToast } from "../../contexts/ToastContext";
 import { useData } from "../../lib/useData";
@@ -67,9 +68,9 @@ export function HouseplantNew() {
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Description</label>
-          <textarea
+          <Editor
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={setDescription}
             rows={3}
             className="w-full border border-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
