@@ -147,23 +147,27 @@ export async function createCellGroup(input: CreateCellGroupInput) {
 }
 
 export async function updateCellGroup(id: number, input: UpdateCellGroupInput) {
-  if (!input.plantType?.trim()) {
+  if (input.plantType !== undefined && !input.plantType.trim()) {
     throw new ValidationError("plantType is required");
   }
 
+  const set: Partial<typeof gardenCellGroups.$inferInsert> = {
+    updatedAt: new Date(),
+  };
+  if (input.plantType !== undefined) set.plantType = input.plantType.trim();
+  if (input.variety !== undefined)
+    set.variety = input.variety?.trim() || null;
+  if (input.cellCount !== undefined) set.cellCount = input.cellCount;
+  if (input.seedCount !== undefined) set.seedCount = input.seedCount;
+  if (input.desiredYield !== undefined) set.desiredYield = input.desiredYield;
+  if (input.actualYield !== undefined) set.actualYield = input.actualYield;
+  if (input.status !== undefined) set.status = input.status;
+  if (input.description !== undefined)
+    set.description = input.description?.trim() || null;
+
   const [updated] = await db
     .update(gardenCellGroups)
-    .set({
-      plantType: input.plantType.trim(),
-      variety: input.variety?.trim() || null,
-      cellCount: input.cellCount || 1,
-      seedCount: input.seedCount || null,
-      desiredYield: input.desiredYield || null,
-      actualYield: input.actualYield || null,
-      status: input.status || "seeded",
-      description: input.description?.trim() || null,
-      updatedAt: new Date(),
-    })
+    .set(set)
     .where(eq(gardenCellGroups.id, id))
     .returning();
 

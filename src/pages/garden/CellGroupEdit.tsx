@@ -71,13 +71,13 @@ export function CellGroupEdit() {
     try {
       await api.put(`/garden/cell-groups/${id}`, {
         plantType: plantType.trim(),
-        variety: variety.trim() || undefined,
+        variety: variety.trim() || null,
         cellCount: parseInt(cellCount) || 1,
-        seedCount: seedCount ? parseInt(seedCount) : undefined,
-        desiredYield: desiredYield ? parseInt(desiredYield) : undefined,
-        actualYield: actualYield ? parseInt(actualYield) : undefined,
+        seedCount: seedCount ? parseInt(seedCount) : null,
+        desiredYield: desiredYield ? parseInt(desiredYield) : null,
+        actualYield: actualYield ? parseInt(actualYield) : null,
         status,
-        description: description.trim() || undefined,
+        description: description.trim() || null,
       });
       addToast("Cell group updated");
       navigate(`/garden/cell-groups/${id}`);
