@@ -110,7 +110,7 @@ export const tools: ToolDefinition[] = [
   {
     name: "update_houseplant",
     description:
-      "Update an existing houseplant by id. Provide name plus any other fields to change.",
+      "Partial update of a houseplant by id. Only the fields you include are changed; omitted fields are left untouched.",
     inputSchema: {
       type: "object",
       properties: {
@@ -124,14 +124,14 @@ export const tools: ToolDefinition[] = [
           enum: ["active", "archived", "dead", "given_away", "sold"],
         },
       },
-      required: ["id", "name"],
+      required: ["id"],
     },
     handler: async (args) =>
       updateHouseplant(requireNumber(args, "id"), {
-        name: requireString(args, "name"),
-        description: optionalString(args, "description") ?? null,
-        parentId: optionalNumber(args, "parentId") ?? null,
-        planterId: optionalNumber(args, "planterId") ?? null,
+        name: "name" in args ? requireString(args, "name") : undefined,
+        description: optionalString(args, "description"),
+        parentId: optionalNumber(args, "parentId"),
+        planterId: optionalNumber(args, "planterId"),
         status: optionalString(args, "status"),
       }),
   },
@@ -180,7 +180,8 @@ export const tools: ToolDefinition[] = [
   },
   {
     name: "update_planter",
-    description: "Update an existing planter by id.",
+    description:
+      "Partial update of a planter by id. Only the fields you include are changed; omitted fields are left untouched.",
     inputSchema: {
       type: "object",
       properties: {
@@ -193,13 +194,13 @@ export const tools: ToolDefinition[] = [
           enum: ["active", "archived", "broken", "given_away", "sold"],
         },
       },
-      required: ["id", "name"],
+      required: ["id"],
     },
     handler: async (args) =>
       updatePlanter(requireNumber(args, "id"), {
-        name: requireString(args, "name"),
-        description: optionalString(args, "description") ?? null,
-        photoBlobKey: optionalString(args, "photoBlobKey") ?? null,
+        name: "name" in args ? requireString(args, "name") : undefined,
+        description: optionalString(args, "description"),
+        photoBlobKey: optionalString(args, "photoBlobKey"),
         status: optionalString(args, "status"),
       }),
   },
@@ -270,7 +271,8 @@ export const tools: ToolDefinition[] = [
   },
   {
     name: "update_garden_cell_group",
-    description: "Update a garden cell group by id.",
+    description:
+      "Partial update of a garden cell group by id. Only the fields you include are changed; omitted fields are left untouched.",
     inputSchema: {
       type: "object",
       properties: {
@@ -295,18 +297,19 @@ export const tools: ToolDefinition[] = [
         },
         description: { type: "string" },
       },
-      required: ["id", "plantType"],
+      required: ["id"],
     },
     handler: async (args) =>
       updateCellGroup(requireNumber(args, "id"), {
-        plantType: requireString(args, "plantType"),
-        variety: optionalString(args, "variety") ?? null,
+        plantType:
+          "plantType" in args ? requireString(args, "plantType") : undefined,
+        variety: optionalString(args, "variety"),
         cellCount: optionalNumber(args, "cellCount"),
-        seedCount: optionalNumber(args, "seedCount") ?? null,
-        desiredYield: optionalNumber(args, "desiredYield") ?? null,
-        actualYield: optionalNumber(args, "actualYield") ?? null,
+        seedCount: optionalNumber(args, "seedCount"),
+        desiredYield: optionalNumber(args, "desiredYield"),
+        actualYield: optionalNumber(args, "actualYield"),
         status: optionalString(args, "status"),
-        description: optionalString(args, "description") ?? null,
+        description: optionalString(args, "description"),
       }),
   },
 

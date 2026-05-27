@@ -82,19 +82,22 @@ export async function createPlanter(input: PlanterInput) {
 }
 
 export async function updatePlanter(id: number, input: PlanterInput) {
-  if (!input.name?.trim()) {
+  if (input.name !== undefined && !input.name.trim()) {
     throw new ValidationError("Name is required");
   }
 
+  const set: Partial<typeof planters.$inferInsert> = {
+    updatedAt: new Date(),
+  };
+  if (input.name !== undefined) set.name = input.name.trim();
+  if (input.description !== undefined)
+    set.description = input.description?.trim() || null;
+  if (input.photoBlobKey !== undefined) set.photoBlobKey = input.photoBlobKey;
+  if (input.status !== undefined) set.status = input.status;
+
   const [updated] = await db
     .update(planters)
-    .set({
-      name: input.name.trim(),
-      description: input.description?.trim() || null,
-      photoBlobKey: input.photoBlobKey ?? undefined,
-      status: input.status || "active",
-      updatedAt: new Date(),
-    })
+    .set(set)
     .where(eq(planters.id, id))
     .returning();
 

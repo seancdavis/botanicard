@@ -69,9 +69,9 @@ export function HouseplantEdit() {
     try {
       await api.put(`/houseplants/${id}`, {
         name: name.trim(),
-        description: description.trim() || undefined,
-        parentId: parentId ? parseInt(parentId) : undefined,
-        planterId: planterId ? parseInt(planterId) : undefined,
+        description: description.trim() || null,
+        parentId: parentId ? parseInt(parentId) : null,
+        planterId: planterId ? parseInt(planterId) : null,
         status,
       });
       addToast("Houseplant updated");

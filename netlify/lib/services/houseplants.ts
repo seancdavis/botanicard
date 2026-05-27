@@ -124,20 +124,23 @@ export async function createHouseplant(input: HouseplantInput) {
 }
 
 export async function updateHouseplant(id: number, input: HouseplantInput) {
-  if (!input.name?.trim()) {
+  if (input.name !== undefined && !input.name.trim()) {
     throw new ValidationError("Name is required");
   }
 
+  const set: Partial<typeof houseplants.$inferInsert> = {
+    updatedAt: new Date(),
+  };
+  if (input.name !== undefined) set.name = input.name.trim();
+  if (input.description !== undefined)
+    set.description = input.description?.trim() || null;
+  if (input.parentId !== undefined) set.parentId = input.parentId;
+  if (input.planterId !== undefined) set.planterId = input.planterId;
+  if (input.status !== undefined) set.status = input.status;
+
   const [updated] = await db
     .update(houseplants)
-    .set({
-      name: input.name.trim(),
-      description: input.description?.trim() || null,
-      parentId: input.parentId || null,
-      planterId: input.planterId || null,
-      status: input.status || "active",
-      updatedAt: new Date(),
-    })
+    .set(set)
     .where(eq(houseplants.id, id))
     .returning();
 

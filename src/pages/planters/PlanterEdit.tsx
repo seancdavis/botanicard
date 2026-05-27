@@ -97,7 +97,7 @@ export function PlanterEdit() {
 
       await api.put(`/planters/${id}`, {
         name: name.trim(),
-        description: description.trim() || undefined,
+        description: description.trim() || null,
         status,
         photoBlobKey,
       });
